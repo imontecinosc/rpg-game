@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi RPG</title>
+  <style>
+    body{
+      margin:0;
+      background:#1e1e1e;
+      color:white;
+      font-family:Arial,sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      text-align:center;
+    }
+
+    button{
+      padding:15px 25px;
+      font-size:20px;
+      margin-top:20px;
+    }
+  </style>
+</head>
+<body>
+
+<div>
+  <h1>⚔️ Mi RPG</h1>
+  <p>¡Bienvenido aventurero!</p>
+  <p>Este es el comienzo de nuestro juego.</p>
+
+  <button onclick="explorar()">
+    Explorar 🌲
+  </button>
+
+  <p id="texto"></p>
+</div>
+
+<script>
+
+function explorar(){
+
+    let eventos=[
+      "Encontraste un cofre con 20 monedas 🪙",
+      "Un slime apareció 👾",
+      "Descubriste una espada oxidada ⚔️",
+      "No encontraste nada..."
+    ];
+
+    let evento=eventos[Math.floor(Math.random()*eventos.length)];
+
+    document.getElementById("texto").innerHTML=evento;
+
+}
+
+</script>
+
+</body>
+</html>
