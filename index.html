@@ -1,59 +1,156 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi RPG</title>
-  <style>
-    body{
-      margin:0;
-      background:#1e1e1e;
-      color:white;
-      font-family:Arial,sans-serif;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      text-align:center;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kingdoms of Ash</title>
 
-    button{
-      padding:15px 25px;
-      font-size:20px;
-      margin-top:20px;
-    }
-  </style>
+<style>
+
+body{
+margin:0;
+background:#222;
+overflow:hidden;
+font-family:Arial;
+}
+
+canvas{
+display:block;
+margin:auto;
+image-rendering:pixelated;
+}
+
+#ui{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:10px;
+}
+
+button{
+width:70px;
+height:70px;
+font-size:28px;
+border:none;
+border-radius:15px;
+background:#444;
+color:white;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<div>
-  <h1>⚔️ Mi RPG</h1>
-  <p>¡Bienvenido aventurero!</p>
-  <p>Este es el comienzo de nuestro juego.</p>
+<canvas id="game" width="640" height="360"></canvas>
 
-  <button onclick="explorar()">
-    Explorar 🌲
-  </button>
-
-  <p id="texto"></p>
+<div id="ui">
+<button onclick="move(-1,0)">⬅️</button>
+<button onclick="move(0,-1)">⬆️</button>
+<button onclick="move(0,1)">⬇️</button>
+<button onclick="move(1,0)">➡️</button>
 </div>
 
 <script>
 
-function explorar(){
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-    let eventos=[
-      "Encontraste un cofre con 20 monedas 🪙",
-      "Un slime apareció 👾",
-      "Descubriste una espada oxidada ⚔️",
-      "No encontraste nada..."
-    ];
+let player={
+x:300,
+y:170
+};
 
-    let evento=eventos[Math.floor(Math.random()*eventos.length)];
+const keys={};
 
-    document.getElementById("texto").innerHTML=evento;
+document.addEventListener("keydown",e=>{
+keys[e.key]=true;
+});
+
+document.addEventListener("keyup",e=>{
+keys[e.key]=false;
+});
+
+function move(x,y){
+player.x+=x*16;
+player.y+=y*16;
+}
+
+function update(){
+
+if(keys["ArrowLeft"]) player.x-=2;
+if(keys["ArrowRight"]) player.x+=2;
+if(keys["ArrowUp"]) player.y-=2;
+if(keys["ArrowDown"]) player.y+=2;
 
 }
+
+function draw(){
+
+ctx.fillStyle="#4d8f43";
+ctx.fillRect(0,0,640,360);
+
+// Lago
+ctx.fillStyle="#3b82f6";
+ctx.fillRect(420,40,170,120);
+
+// Casa
+ctx.fillStyle="#777";
+ctx.fillRect(120,90,90,90);
+
+ctx.fillStyle="#8b4513";
+ctx.fillRect(150,145,30,35);
+
+ctx.fillStyle="#884400";
+ctx.beginPath();
+ctx.moveTo(110,90);
+ctx.lineTo(165,45);
+ctx.lineTo(220,90);
+ctx.fill();
+
+// Árboles
+
+function tree(x,y){
+
+ctx.fillStyle="#6b3f18";
+ctx.fillRect(x+8,y+18,8,18);
+
+ctx.fillStyle="#1b8d2d";
+ctx.beginPath();
+ctx.arc(x+12,y+12,18,0,Math.PI*2);
+ctx.fill();
+
+}
+
+tree(40,40);
+tree(70,260);
+tree(280,70);
+tree(560,250);
+tree(520,180);
+
+// Personaje
+
+ctx.fillStyle="#245cff";
+ctx.fillRect(player.x,player.y,16,20);
+
+ctx.fillStyle="#ffe0bd";
+ctx.fillRect(player.x+2,player.y-8,12,10);
+
+}
+
+function gameLoop(){
+
+update();
+draw();
+
+requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
 
 </script>
 
