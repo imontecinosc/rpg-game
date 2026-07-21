@@ -12,17 +12,25 @@ const manaText = document.getElementById("mana-text");
 
 const playerLevel = document.getElementById("player-level");
 const missionTitle = document.getElementById("mission-title");
-const missionDescription = document.getElementById("mission-description");
+const missionDescription = document.getElementById(
+  "mission-description"
+);
 const gameMessage = document.getElementById("game-message");
 
 const attackButton = document.getElementById("attack-button");
 const magicButton = document.getElementById("magic-button");
-const interactButton = document.getElementById("interact-button");
+const interactButton = document.getElementById(
+  "interact-button"
+);
 const potionButton = document.getElementById("potion-button");
 const potionCount = document.getElementById("potion-count");
 
-const inventoryButton = document.getElementById("inventory-button");
-const inventoryPanel = document.getElementById("inventory-panel");
+const inventoryButton = document.getElementById(
+  "inventory-button"
+);
+const inventoryPanel = document.getElementById(
+  "inventory-panel"
+);
 const closeInventoryButton = document.getElementById(
   "close-inventory-button"
 );
@@ -30,35 +38,33 @@ const closeInventoryButton = document.getElementById(
 const interactionMessage = document.getElementById(
   "interaction-message"
 );
-
 const interactionText = document.getElementById(
   "interaction-text"
 );
 
 const joystickBase = document.getElementById("joystick-base");
-const joystickStick = document.getElementById("joystick-stick");
+const joystickStick = document.getElementById(
+  "joystick-stick"
+);
 
 let gameStarted = false;
 let lastTime = 0;
 let elapsedTime = 0;
 let cameraShake = 0;
+let activeTouchId = null;
 
 const TILE_WIDTH = 96;
 const TILE_HEIGHT = 48;
 const MAP_WIDTH = 18;
 const MAP_HEIGHT = 18;
 
-const keys = {};
+const camera = {
+  x: 0,
+  y: 0
+};
 
 const joystick = {
   active: false,
-  pointerId: null,
-  x: 0,
-  y: 0,
-  radius: 45
-};
-
-const camera = {
   x: 0,
   y: 0
 };
@@ -67,7 +73,7 @@ const player = {
   x: 8,
   y: 8,
   radius: 0.25,
-  speed: 3.1,
+  speed: 3.2,
   directionX: 1,
   directionY: 0,
   health: 100,
@@ -190,19 +196,31 @@ function createEnemy(x, y) {
 }
 
 function resizeCanvas() {
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelRatio = Math.min(
+    window.devicePixelRatio || 1,
+    2
+  );
 
-  canvas.width = Math.floor(window.innerWidth * pixelRatio);
-  canvas.height = Math.floor(window.innerHeight * pixelRatio);
+  canvas.width = Math.floor(
+    window.innerWidth * pixelRatio
+  );
+
+  canvas.height = Math.floor(
+    window.innerHeight * pixelRatio
+  );
 
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
 
-  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  ctx.setTransform(
+    pixelRatio,
+    0,
+    0,
+    pixelRatio,
+    0,
+    0
+  );
 }
-
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
 
 function worldToScreen(x, y, z = 0) {
   return {
@@ -219,12 +237,18 @@ function worldToScreen(x, y, z = 0) {
   };
 }
 
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+function distance(first, second) {
+  return Math.hypot(
+    first.x - second.x,
+    first.y - second.y
+  );
 }
 
 function clamp(value, minimum, maximum) {
-  return Math.max(minimum, Math.min(maximum, value));
+  return Math.max(
+    minimum,
+    Math.min(maximum, value)
+  );
 }
 
 function showMessage(text, duration = 3) {
@@ -270,7 +294,7 @@ function updateInterface() {
   if (gameState.missionStage === 1) {
     missionTitle.textContent = "El tesoro perdido";
     missionDescription.textContent =
-      "Abre el cofre ubicado en el centro de las ruinas.";
+      "Abre el cofre ubicado en el centro.";
   }
 
   if (gameState.missionStage === 2) {
@@ -299,7 +323,10 @@ function isBlocked(x, y) {
 
   for (const obstacle of obstacles) {
     if (
-      Math.hypot(x - obstacle.x, y - obstacle.y) < 0.6
+      Math.hypot(
+        x - obstacle.x,
+        y - obstacle.y
+      ) < 0.58
     ) {
       return true;
     }
@@ -309,35 +336,20 @@ function isBlocked(x, y) {
 }
 
 function updatePlayer(deltaTime) {
-  let movementX = 0;
-  let movementY = 0;
+  /*
+    Convierte la dirección del joystick de pantalla
+    a movimiento dentro del mapa isométrico.
+  */
 
-  if (keys.ArrowUp || keys.KeyW) {
-    movementX -= 1;
-    movementY -= 1;
-  }
+  let movementX = joystick.y + joystick.x;
+  let movementY = joystick.y - joystick.x;
 
-  if (keys.ArrowDown || keys.KeyS) {
-    movementX += 1;
-    movementY += 1;
-  }
+  const movementLength = Math.hypot(
+    movementX,
+    movementY
+  );
 
-  if (keys.ArrowLeft || keys.KeyA) {
-    movementX -= 1;
-    movementY += 1;
-  }
-
-  if (keys.ArrowRight || keys.KeyD) {
-    movementX += 1;
-    movementY -= 1;
-  }
-
-  movementX += joystick.x;
-  movementY += joystick.y;
-
-  const movementLength = Math.hypot(movementX, movementY);
-
-  player.isMoving = movementLength > 0.05;
+  player.isMoving = movementLength > 0.08;
 
   if (player.isMoving) {
     movementX /= movementLength;
@@ -347,10 +359,16 @@ function updatePlayer(deltaTime) {
     player.directionY = movementY;
 
     const nextX =
-      player.x + movementX * player.speed * deltaTime;
+      player.x +
+      movementX *
+      player.speed *
+      deltaTime;
 
     const nextY =
-      player.y + movementY * player.speed * deltaTime;
+      player.y +
+      movementY *
+      player.speed *
+      deltaTime;
 
     if (!isBlocked(nextX, player.y)) {
       player.x = nextX;
@@ -384,17 +402,21 @@ function updatePlayer(deltaTime) {
   );
 
   camera.x +=
-    (-((player.x - player.y) * TILE_WIDTH / 2) -
-      camera.x) *
+    (
+      -((player.x - player.y) * TILE_WIDTH / 2) -
+      camera.x
+    ) *
     deltaTime *
-    3;
+    4;
 
   camera.y +=
-    (-((player.x + player.y) * TILE_HEIGHT / 2) +
+    (
+      -((player.x + player.y) * TILE_HEIGHT / 2) +
       window.innerHeight * 0.22 -
-      camera.y) *
+      camera.y
+    ) *
     deltaTime *
-    3;
+    4;
 }
 
 function updateEnemies(deltaTime) {
@@ -404,7 +426,12 @@ function updateEnemies(deltaTime) {
     }
 
     enemy.animation += deltaTime * 4;
-    enemy.hitFlash = Math.max(0, enemy.hitFlash - deltaTime);
+
+    enemy.hitFlash = Math.max(
+      0,
+      enemy.hitFlash - deltaTime
+    );
+
     enemy.attackCooldown = Math.max(
       0,
       enemy.attackCooldown - deltaTime
@@ -412,18 +439,29 @@ function updateEnemies(deltaTime) {
 
     const enemyDistance = distance(enemy, player);
 
-    if (enemyDistance < 5 && enemyDistance > 0.7) {
+    if (
+      enemyDistance < 5 &&
+      enemyDistance > 0.75
+    ) {
       const directionX =
-        (player.x - enemy.x) / enemyDistance;
+        (player.x - enemy.x) /
+        enemyDistance;
 
       const directionY =
-        (player.y - enemy.y) / enemyDistance;
+        (player.y - enemy.y) /
+        enemyDistance;
 
       const nextX =
-        enemy.x + directionX * enemy.speed * deltaTime;
+        enemy.x +
+        directionX *
+        enemy.speed *
+        deltaTime;
 
       const nextY =
-        enemy.y + directionY * enemy.speed * deltaTime;
+        enemy.y +
+        directionY *
+        enemy.speed *
+        deltaTime;
 
       if (!isBlocked(nextX, enemy.y)) {
         enemy.x = nextX;
@@ -435,7 +473,7 @@ function updateEnemies(deltaTime) {
     }
 
     if (
-      enemyDistance < 0.8 &&
+      enemyDistance < 0.82 &&
       enemy.attackCooldown <= 0
     ) {
       damagePlayer(8);
@@ -448,6 +486,7 @@ function updateEnemies(deltaTime) {
   }
 
   guardian.animation += deltaTime * 3;
+
   guardian.hitFlash = Math.max(
     0,
     guardian.hitFlash - deltaTime
@@ -458,22 +497,34 @@ function updateEnemies(deltaTime) {
     guardian.attackCooldown - deltaTime
   );
 
-  const guardianDistance = distance(guardian, player);
+  const guardianDistance = distance(
+    guardian,
+    player
+  );
 
-  if (guardianDistance < 6 && guardianDistance > 0.9) {
+  if (
+    guardianDistance < 6 &&
+    guardianDistance > 0.95
+  ) {
     const directionX =
-      (player.x - guardian.x) / guardianDistance;
+      (player.x - guardian.x) /
+      guardianDistance;
 
     const directionY =
-      (player.y - guardian.y) / guardianDistance;
+      (player.y - guardian.y) /
+      guardianDistance;
 
     const nextX =
       guardian.x +
-      directionX * guardian.speed * deltaTime;
+      directionX *
+      guardian.speed *
+      deltaTime;
 
     const nextY =
       guardian.y +
-      directionY * guardian.speed * deltaTime;
+      directionY *
+      guardian.speed *
+      deltaTime;
 
     if (!isBlocked(nextX, guardian.y)) {
       guardian.x = nextX;
@@ -505,15 +556,26 @@ function damagePlayer(amount) {
   player.invulnerability = 0.65;
   cameraShake = 10;
 
-  addFloatingText(player.x, player.y, `-${amount}`);
-  createParticles(player.x, player.y, 8);
+  addFloatingText(
+    player.x,
+    player.y,
+    `-${amount}`
+  );
+
+  createParticles(
+    player.x,
+    player.y,
+    8
+  );
 
   if (player.health <= 0) {
     player.health = 0;
     gameState.gameOver = true;
 
+    resetJoystick();
+
     showMessage(
-      "Has caído. Toca la pantalla para volver a intentarlo.",
+      "Has caído. Pulsa Usar para regresar.",
       10
     );
   }
@@ -523,13 +585,14 @@ function damagePlayer(amount) {
 
 function attack() {
   if (
+    !gameStarted ||
     player.attackCooldown > 0 ||
     gameState.gameOver
   ) {
     return;
   }
 
-  player.attackCooldown = 0.5;
+  player.attackCooldown = 0.45;
   cameraShake = 3;
 
   createParticles(
@@ -545,7 +608,7 @@ function attack() {
       continue;
     }
 
-    if (distance(player, enemy) < 1.35) {
+    if (distance(player, enemy) < 1.4) {
       damageEnemy(enemy, 25);
       hitSomething = true;
     }
@@ -553,26 +616,34 @@ function attack() {
 
   if (
     guardian.alive &&
-    distance(player, guardian) < 1.5
+    distance(player, guardian) < 1.55
   ) {
     damageGuardian(22);
     hitSomething = true;
   }
 
   if (!hitSomething) {
-    showMessage("Tu espada corta el aire.", 1.2);
+    showMessage(
+      "Tu espada corta el aire.",
+      1.2
+    );
   }
 }
 
 function castMagic() {
   if (
+    !gameStarted ||
     player.magicCooldown > 0 ||
-    player.mana < 15 ||
     gameState.gameOver
   ) {
-    if (player.mana < 15) {
-      showMessage("No tienes suficiente maná.", 1.5);
-    }
+    return;
+  }
+
+  if (player.mana < 15) {
+    showMessage(
+      "No tienes suficiente maná.",
+      1.5
+    );
 
     return;
   }
@@ -580,11 +651,27 @@ function castMagic() {
   player.mana -= 15;
   player.magicCooldown = 0.65;
 
+  let directionX = player.directionX;
+  let directionY = player.directionY;
+
+  const directionLength = Math.hypot(
+    directionX,
+    directionY
+  );
+
+  if (directionLength < 0.01) {
+    directionX = 1;
+    directionY = 0;
+  } else {
+    directionX /= directionLength;
+    directionY /= directionLength;
+  }
+
   projectiles.push({
     x: player.x,
     y: player.y,
-    directionX: player.directionX,
-    directionY: player.directionY,
+    directionX,
+    directionY,
     speed: 7,
     life: 1.4,
     radius: 0.32
@@ -593,16 +680,26 @@ function castMagic() {
   updateInterface();
 }
 
-
 function damageEnemy(enemy, amount) {
   enemy.health -= amount;
   enemy.hitFlash = 0.15;
 
-  addFloatingText(enemy.x, enemy.y, `-${amount}`);
-  createParticles(enemy.x, enemy.y, 7);
+  addFloatingText(
+    enemy.x,
+    enemy.y,
+    `-${amount}`
+  );
+
+  createParticles(
+    enemy.x,
+    enemy.y,
+    7
+  );
 
   if (enemy.health <= 0) {
+    enemy.health = 0;
     enemy.alive = false;
+
     player.experience += 30;
 
     showMessage(
@@ -624,7 +721,11 @@ function damageGuardian(amount) {
     `-${amount}`
   );
 
-  createParticles(guardian.x, guardian.y, 12);
+  createParticles(
+    guardian.x,
+    guardian.y,
+    12
+  );
 
   if (guardian.health <= 0) {
     guardian.health = 0;
@@ -636,7 +737,7 @@ function damageGuardian(amount) {
     player.experience += 100;
 
     showMessage(
-      "El guardián ha sido derrotado. Abre el cofre.",
+      "El guardián ha caído. Ahora abre el cofre.",
       4
     );
 
@@ -646,9 +747,12 @@ function damageGuardian(amount) {
 }
 
 function checkLevelUp() {
-  const requiredExperience = player.level * 100;
+  let requiredExperience =
+    player.level * 100;
 
-  if (player.experience >= requiredExperience) {
+  while (
+    player.experience >= requiredExperience
+  ) {
     player.experience -= requiredExperience;
     player.level += 1;
 
@@ -663,82 +767,118 @@ function checkLevelUp() {
       3
     );
 
-    updateInterface();
+    requiredExperience =
+      player.level * 100;
   }
+
+  updateInterface();
 }
 
 function usePotion() {
-  if (
-    player.potions <= 0 ||
-    player.health >= player.maxHealth ||
-    gameState.gameOver
-  ) {
-    if (player.potions <= 0) {
-      showMessage("No quedan pociones.", 1.5);
-    } else if (player.health >= player.maxHealth) {
-      showMessage("Tu salud ya está completa.", 1.5);
-    }
+  if (!gameStarted || gameState.gameOver) {
+    return;
+  }
+
+  if (player.potions <= 0) {
+    showMessage(
+      "No quedan pociones.",
+      1.5
+    );
+
+    return;
+  }
+
+  if (player.health >= player.maxHealth) {
+    showMessage(
+      "Tu salud ya está completa.",
+      1.5
+    );
 
     return;
   }
 
   player.potions -= 1;
+
   player.health = Math.min(
     player.maxHealth,
     player.health + 45
   );
 
-  createParticles(player.x, player.y, 12);
-  showMessage("Has recuperado salud.", 2);
+  createParticles(
+    player.x,
+    player.y,
+    12
+  );
+
+  showMessage(
+    "Has recuperado salud.",
+    2
+  );
 
   updateInterface();
 }
 
 function interact() {
+  if (!gameStarted) {
+    return;
+  }
+
   if (gameState.gameOver) {
     restartGame();
     return;
   }
 
-  const chestDistance = distance(player, chest);
+  const chestDistance = distance(
+    player,
+    chest
+  );
 
-  if (chestDistance < 1.25) {
-    if (!gameState.guardianDefeated) {
-      showMessage(
-        "Una fuerza oscura mantiene el cofre cerrado.",
-        2.5
-      );
+  if (chestDistance >= 1.35) {
+    showMessage(
+      "No hay nada cerca para usar.",
+      1.5
+    );
 
-      return;
-    }
+    return;
+  }
 
-    if (!chest.opened) {
-      chest.opened = true;
-      gameState.chestOpened = true;
-      gameState.missionStage = 2;
+  if (!gameState.guardianDefeated) {
+    showMessage(
+      "Una fuerza oscura mantiene cerrado el cofre.",
+      2.5
+    );
 
-      player.potions += 2;
-      player.experience += 50;
+    return;
+  }
 
-      createParticles(chest.x, chest.y, 25);
+  if (!chest.opened) {
+    chest.opened = true;
 
-      showMessage(
-        "Has encontrado el cristal de Eldoria y dos pociones.",
-        5
-      );
+    gameState.chestOpened = true;
+    gameState.missionStage = 2;
 
-      checkLevelUp();
-      updateInterface();
+    player.potions += 2;
+    player.experience += 50;
 
-      return;
-    }
+    createParticles(
+      chest.x,
+      chest.y,
+      25
+    );
 
-    showMessage("El cofre está vacío.", 1.5);
+    showMessage(
+      "Encontraste el cristal de Eldoria y dos pociones.",
+      5
+    );
+
+    checkLevelUp();
+    updateInterface();
+
     return;
   }
 
   showMessage(
-    "No hay nada con lo que puedas interactuar.",
+    "El cofre está vacío.",
     1.5
   );
 }
@@ -752,6 +892,8 @@ function restartGame() {
 
   gameState.gameOver = false;
 
+  resetJoystick();
+
   showMessage(
     "Has regresado a las ruinas.",
     2
@@ -761,16 +903,24 @@ function restartGame() {
 }
 
 function createParticles(x, y, amount) {
-  for (let index = 0; index < amount; index++) {
+  for (
+    let index = 0;
+    index < amount;
+    index++
+  ) {
     particles.push({
       x,
       y,
       offsetX: 0,
       offsetY: 0,
-      velocityX: (Math.random() - 0.5) * 70,
-      velocityY: -30 - Math.random() * 70,
-      life: 0.4 + Math.random() * 0.5,
-      size: 2 + Math.random() * 4
+      velocityX:
+        (Math.random() - 0.5) * 70,
+      velocityY:
+        -30 - Math.random() * 70,
+      life:
+        0.4 + Math.random() * 0.5,
+      size:
+        2 + Math.random() * 4
     });
   }
 }
@@ -808,7 +958,9 @@ function updateProjectiles(deltaTime) {
         continue;
       }
 
-      if (distance(projectile, enemy) < 0.6) {
+      if (
+        distance(projectile, enemy) < 0.6
+      ) {
         damageEnemy(enemy, 35);
         collided = true;
         break;
@@ -816,6 +968,7 @@ function updateProjectiles(deltaTime) {
     }
 
     if (
+      !collided &&
       guardian.alive &&
       distance(projectile, guardian) < 0.75
     ) {
@@ -825,7 +978,10 @@ function updateProjectiles(deltaTime) {
 
     if (
       projectile.life <= 0 ||
-      isBlocked(projectile.x, projectile.y) ||
+      isBlocked(
+        projectile.x,
+        projectile.y
+      ) ||
       collided
     ) {
       createParticles(
@@ -847,10 +1003,15 @@ function updateEffects(deltaTime) {
   ) {
     const particle = particles[index];
 
-    particle.offsetX += particle.velocityX * deltaTime;
-    particle.offsetY += particle.velocityY * deltaTime;
+    particle.offsetX +=
+      particle.velocityX * deltaTime;
 
-    particle.velocityY += 150 * deltaTime;
+    particle.offsetY +=
+      particle.velocityY * deltaTime;
+
+    particle.velocityY +=
+      150 * deltaTime;
+
     particle.life -= deltaTime;
 
     if (particle.life <= 0) {
@@ -865,7 +1026,11 @@ function updateEffects(deltaTime) {
   ) {
     const text = floatingTexts[index];
 
-    text.y += text.velocityY * deltaTime / TILE_HEIGHT;
+    text.y +=
+      text.velocityY *
+      deltaTime /
+      TILE_HEIGHT;
+
     text.life -= deltaTime;
 
     if (text.life <= 0) {
@@ -884,46 +1049,72 @@ function updateEffects(deltaTime) {
 }
 
 function updateInteractionIndicator() {
-  const nearChest = distance(player, chest) < 1.35;
+  const nearChest =
+    distance(player, chest) < 1.4;
 
-  if (nearChest) {
-    interactionText.textContent = chest.opened
-      ? "Cofre vacío"
-      : "Abrir cofre";
+  if (!nearChest || gameState.gameOver) {
+    interactionMessage.classList.add(
+      "hidden"
+    );
 
-    interactionMessage.classList.remove("hidden");
-  } else {
-    interactionMessage.classList.add("hidden");
+    return;
   }
+
+  if (!gameState.guardianDefeated) {
+    interactionText.textContent =
+      "Cofre sellado";
+  } else if (chest.opened) {
+    interactionText.textContent =
+      "Cofre vacío";
+  } else {
+    interactionText.textContent =
+      "Pulsa Usar";
+  }
+
+  interactionMessage.classList.remove(
+    "hidden"
+  );
 }
 
 function drawTile(x, y, type) {
   const screen = worldToScreen(x, y);
 
   ctx.beginPath();
-  ctx.moveTo(screen.x, screen.y);
+
+  ctx.moveTo(
+    screen.x,
+    screen.y
+  );
+
   ctx.lineTo(
     screen.x + TILE_WIDTH / 2,
     screen.y + TILE_HEIGHT / 2
   );
+
   ctx.lineTo(
     screen.x,
     screen.y + TILE_HEIGHT
   );
+
   ctx.lineTo(
     screen.x - TILE_WIDTH / 2,
     screen.y + TILE_HEIGHT / 2
   );
+
   ctx.closePath();
 
   if (type === "grass") {
     ctx.fillStyle =
-      (x + y) % 2 === 0 ? "#293b32" : "#24352d";
+      (x + y) % 2 === 0
+        ? "#293b32"
+        : "#24352d";
   }
 
   if (type === "stone") {
     ctx.fillStyle =
-      (x + y) % 2 === 0 ? "#4c4d4c" : "#414342";
+      (x + y) % 2 === 0
+        ? "#4c4d4c"
+        : "#414342";
   }
 
   if (type === "wall") {
@@ -932,12 +1123,16 @@ function drawTile(x, y, type) {
 
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(9, 14, 13, 0.5)";
+  ctx.strokeStyle =
+    "rgba(9, 14, 13, 0.5)";
+
   ctx.lineWidth = 1;
   ctx.stroke();
 
   if (type === "stone") {
-    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.strokeStyle =
+      "rgba(255,255,255,0.05)";
+
     ctx.beginPath();
 
     ctx.moveTo(
@@ -955,45 +1150,102 @@ function drawTile(x, y, type) {
 }
 
 function drawWorldObject(object) {
-  const screen = worldToScreen(object.x, object.y);
+  const screen = worldToScreen(
+    object.x,
+    object.y
+  );
 
   if (object.type === "pillar") {
     ctx.fillStyle = "#242a29";
-    ctx.fillRect(screen.x - 13, screen.y - 45, 26, 48);
+
+    ctx.fillRect(
+      screen.x - 13,
+      screen.y - 45,
+      26,
+      48
+    );
 
     ctx.fillStyle = "#59605d";
-    ctx.fillRect(screen.x - 17, screen.y - 50, 34, 9);
+
+    ctx.fillRect(
+      screen.x - 17,
+      screen.y - 50,
+      34,
+      9
+    );
 
     ctx.fillStyle = "#373d3b";
-    ctx.fillRect(screen.x - 18, screen.y - 4, 36, 9);
+
+    ctx.fillRect(
+      screen.x - 18,
+      screen.y - 4,
+      36,
+      9
+    );
   }
 
   if (object.type === "rock") {
     ctx.fillStyle = "#343b39";
 
     ctx.beginPath();
-    ctx.moveTo(screen.x - 20, screen.y);
-    ctx.lineTo(screen.x - 12, screen.y - 18);
-    ctx.lineTo(screen.x + 10, screen.y - 23);
-    ctx.lineTo(screen.x + 22, screen.y - 5);
-    ctx.lineTo(screen.x + 12, screen.y + 6);
+
+    ctx.moveTo(
+      screen.x - 20,
+      screen.y
+    );
+
+    ctx.lineTo(
+      screen.x - 12,
+      screen.y - 18
+    );
+
+    ctx.lineTo(
+      screen.x + 10,
+      screen.y - 23
+    );
+
+    ctx.lineTo(
+      screen.x + 22,
+      screen.y - 5
+    );
+
+    ctx.lineTo(
+      screen.x + 12,
+      screen.y + 6
+    );
+
     ctx.closePath();
     ctx.fill();
   }
 
   if (object.type === "tree") {
     ctx.fillStyle = "#30251d";
-    ctx.fillRect(screen.x - 7, screen.y - 45, 14, 50);
+
+    ctx.fillRect(
+      screen.x - 7,
+      screen.y - 45,
+      14,
+      50
+    );
 
     ctx.fillStyle = "#173326";
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y - 55, 28, 0, Math.PI * 2);
+
+    ctx.arc(
+      screen.x,
+      screen.y - 55,
+      28,
+      0,
+      Math.PI * 2
+    );
+
     ctx.fill();
 
     ctx.fillStyle = "#214833";
 
     ctx.beginPath();
+
     ctx.arc(
       screen.x - 10,
       screen.y - 67,
@@ -1001,52 +1253,94 @@ function drawWorldObject(object) {
       0,
       Math.PI * 2
     );
+
     ctx.fill();
   }
 }
 
 function drawChest() {
-  const screen = worldToScreen(chest.x, chest.y);
+  const screen = worldToScreen(
+    chest.x,
+    chest.y
+  );
 
   ctx.fillStyle = "#291d15";
-  ctx.fillRect(screen.x - 22, screen.y - 18, 44, 24);
 
-  ctx.fillStyle = chest.opened ? "#443326" : "#70502d";
-  ctx.fillRect(screen.x - 20, screen.y - 30, 40, 16);
+  ctx.fillRect(
+    screen.x - 22,
+    screen.y - 18,
+    44,
+    24
+  );
+
+  ctx.fillStyle = chest.opened
+    ? "#443326"
+    : "#70502d";
+
+  ctx.fillRect(
+    screen.x - 20,
+    screen.y - 30,
+    40,
+    16
+  );
 
   ctx.fillStyle = "#c5a45c";
-  ctx.fillRect(screen.x - 3, screen.y - 20, 6, 15);
+
+  ctx.fillRect(
+    screen.x - 3,
+    screen.y - 20,
+    6,
+    15
+  );
 
   if (!chest.opened) {
-    ctx.fillStyle = "rgba(221, 185, 96, 0.2)";
+    ctx.fillStyle =
+      "rgba(221, 185, 96, 0.2)";
 
     ctx.beginPath();
+
     ctx.arc(
       screen.x,
       screen.y - 15,
-      28 + Math.sin(elapsedTime * 3) * 4,
+      28 +
+        Math.sin(elapsedTime * 3) * 4,
       0,
       Math.PI * 2
     );
+
     ctx.fill();
   }
 }
 
-function drawCharacter(character, guardianMode = false) {
-  if (!character.alive && character !== player) {
+function drawCharacter(
+  character,
+  guardianMode = false
+) {
+  if (
+    character !== player &&
+    !character.alive
+  ) {
     return;
   }
 
-  const screen = worldToScreen(character.x, character.y);
+  const screen = worldToScreen(
+    character.x,
+    character.y
+  );
 
   const walk =
-    character === player && player.isMoving
+    character === player &&
+    player.isMoving
       ? Math.sin(player.animation) * 3
-      : Math.sin(character.animation || 0) * 1.5;
+      : Math.sin(
+          character.animation || 0
+        ) * 1.5;
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.fillStyle =
+    "rgba(0, 0, 0, 0.35)";
 
   ctx.beginPath();
+
   ctx.ellipse(
     screen.x,
     screen.y + 5,
@@ -1056,12 +1350,15 @@ function drawCharacter(character, guardianMode = false) {
     0,
     Math.PI * 2
   );
+
   ctx.fill();
 
   if (
     character === player &&
     player.invulnerability > 0 &&
-    Math.floor(player.invulnerability * 15) % 2 === 0
+    Math.floor(
+      player.invulnerability * 15
+    ) % 2 === 0
   ) {
     ctx.globalAlpha = 0.4;
   }
@@ -1080,16 +1377,20 @@ function drawCharacter(character, guardianMode = false) {
 
   ctx.moveTo(
     screen.x,
-    screen.y - (guardianMode ? 54 : 45) + walk
+    screen.y -
+      (guardianMode ? 54 : 45) +
+      walk
   );
 
   ctx.lineTo(
-    screen.x + (guardianMode ? 24 : 18),
+    screen.x +
+      (guardianMode ? 24 : 18),
     screen.y
   );
 
   ctx.lineTo(
-    screen.x - (guardianMode ? 24 : 18),
+    screen.x -
+      (guardianMode ? 24 : 18),
     screen.y
   );
 
@@ -1097,13 +1398,17 @@ function drawCharacter(character, guardianMode = false) {
   ctx.fill();
 
   ctx.fillStyle =
-    character.hitFlash > 0 ? "#ffffff" : "#d7b08a";
+    character.hitFlash > 0
+      ? "#ffffff"
+      : "#d7b08a";
 
   ctx.beginPath();
 
   ctx.arc(
     screen.x,
-    screen.y - (guardianMode ? 62 : 51) + walk,
+    screen.y -
+      (guardianMode ? 62 : 51) +
+      walk,
     guardianMode ? 12 : 10,
     0,
     Math.PI * 2
@@ -1111,23 +1416,33 @@ function drawCharacter(character, guardianMode = false) {
 
   ctx.fill();
 
-  ctx.fillStyle = guardianMode ? "#161418" : "#16283c";
+  ctx.fillStyle = guardianMode
+    ? "#161418"
+    : "#16283c";
 
   ctx.beginPath();
 
   ctx.moveTo(
-    screen.x - (guardianMode ? 20 : 16),
-    screen.y - (guardianMode ? 60 : 50) + walk
+    screen.x -
+      (guardianMode ? 20 : 16),
+    screen.y -
+      (guardianMode ? 60 : 50) +
+      walk
   );
 
   ctx.lineTo(
     screen.x,
-    screen.y - (guardianMode ? 94 : 82) + walk
+    screen.y -
+      (guardianMode ? 94 : 82) +
+      walk
   );
 
   ctx.lineTo(
-    screen.x + (guardianMode ? 20 : 16),
-    screen.y - (guardianMode ? 60 : 50) + walk
+    screen.x +
+      (guardianMode ? 20 : 16),
+    screen.y -
+      (guardianMode ? 60 : 50) +
+      walk
   );
 
   ctx.closePath();
@@ -1139,7 +1454,9 @@ function drawCharacter(character, guardianMode = false) {
 
   ctx.arc(
     screen.x + 4,
-    screen.y - (guardianMode ? 63 : 52) + walk,
+    screen.y -
+      (guardianMode ? 63 : 52) +
+      walk,
     2,
     0,
     Math.PI * 2
@@ -1150,24 +1467,32 @@ function drawCharacter(character, guardianMode = false) {
   ctx.globalAlpha = 1;
 
   if (character !== player) {
-    const healthWidth = guardianMode ? 62 : 40;
-    const healthPercentage =
-      character.health / character.maxHealth;
+    const healthWidth =
+      guardianMode ? 62 : 40;
 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    const healthPercentage =
+      character.health /
+      character.maxHealth;
+
+    ctx.fillStyle =
+      "rgba(0, 0, 0, 0.7)";
 
     ctx.fillRect(
       screen.x - healthWidth / 2,
-      screen.y - (guardianMode ? 110 : 94),
+      screen.y -
+        (guardianMode ? 110 : 94),
       healthWidth,
       6
     );
 
-    ctx.fillStyle = guardianMode ? "#9d293c" : "#a64242";
+    ctx.fillStyle = guardianMode
+      ? "#9d293c"
+      : "#a64242";
 
     ctx.fillRect(
       screen.x - healthWidth / 2,
-      screen.y - (guardianMode ? 110 : 94),
+      screen.y -
+        (guardianMode ? 110 : 94),
       healthWidth * healthPercentage,
       6
     );
@@ -1182,32 +1507,61 @@ function drawProjectiles() {
       22
     );
 
-    const glow = ctx.createRadialGradient(
-      screen.x,
-      screen.y,
-      1,
-      screen.x,
-      screen.y,
-      18
+    const glow =
+      ctx.createRadialGradient(
+        screen.x,
+        screen.y,
+        1,
+        screen.x,
+        screen.y,
+        18
+      );
+
+    glow.addColorStop(
+      0,
+      "rgba(255,255,220,1)"
     );
 
-    glow.addColorStop(0, "rgba(255,255,220,1)");
-    glow.addColorStop(0.3, "rgba(255,150,45,0.9)");
-    glow.addColorStop(1, "rgba(255,70,20,0)");
+    glow.addColorStop(
+      0.3,
+      "rgba(255,150,45,0.9)"
+    );
+
+    glow.addColorStop(
+      1,
+      "rgba(255,70,20,0)"
+    );
 
     ctx.fillStyle = glow;
 
     ctx.beginPath();
-    ctx.arc(screen.x, screen.y, 18, 0, Math.PI * 2);
+
+    ctx.arc(
+      screen.x,
+      screen.y,
+      18,
+      0,
+      Math.PI * 2
+    );
+
     ctx.fill();
   }
 }
 
 function drawEffects() {
   for (const particle of particles) {
-    const screen = worldToScreen(particle.x, particle.y, 20);
+    const screen = worldToScreen(
+      particle.x,
+      particle.y,
+      20
+    );
 
-    ctx.globalAlpha = clamp(particle.life * 2, 0, 1);
+    ctx.globalAlpha = clamp(
+      particle.life * 2,
+      0,
+      1
+    );
+
     ctx.fillStyle = "#e5b65a";
 
     ctx.fillRect(
@@ -1219,16 +1573,29 @@ function drawEffects() {
   }
 
   ctx.globalAlpha = 1;
-
   ctx.textAlign = "center";
   ctx.font = "bold 18px sans-serif";
 
   for (const text of floatingTexts) {
-    const screen = worldToScreen(text.x, text.y, 65);
+    const screen = worldToScreen(
+      text.x,
+      text.y,
+      65
+    );
 
-    ctx.globalAlpha = clamp(text.life, 0, 1);
+    ctx.globalAlpha = clamp(
+      text.life,
+      0,
+      1
+    );
+
     ctx.fillStyle = "#ffd5a2";
-    ctx.fillText(text.text, screen.x, screen.y);
+
+    ctx.fillText(
+      text.text,
+      screen.x,
+      screen.y
+    );
   }
 
   ctx.globalAlpha = 1;
@@ -1237,33 +1604,53 @@ function drawEffects() {
 function drawScene() {
   const shakeX =
     cameraShake > 0
-      ? (Math.random() - 0.5) * cameraShake
+      ? (Math.random() - 0.5) *
+        cameraShake
       : 0;
 
   const shakeY =
     cameraShake > 0
-      ? (Math.random() - 0.5) * cameraShake
+      ? (Math.random() - 0.5) *
+        cameraShake
       : 0;
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
 
-  const background = ctx.createLinearGradient(
+  const background =
+    ctx.createLinearGradient(
+      0,
+      0,
+      0,
+      window.innerHeight
+    );
+
+  background.addColorStop(
+    0,
+    "#090d12"
+  );
+
+  background.addColorStop(
+    1,
+    "#151d1b"
+  );
+
+  ctx.fillStyle = background;
+
+  ctx.fillRect(
     0,
     0,
-    0,
+    window.innerWidth,
     window.innerHeight
   );
 
-  background.addColorStop(0, "#090d12");
-  background.addColorStop(1, "#151d1b");
-
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
   for (let y = 0; y < MAP_HEIGHT; y++) {
     for (let x = 0; x < MAP_WIDTH; x++) {
-      drawTile(x, y, map[y][x]);
+      drawTile(
+        x,
+        y,
+        map[y][x]
+      );
     }
   }
 
@@ -1271,8 +1658,10 @@ function drawScene() {
 
   for (const obstacle of obstacles) {
     renderObjects.push({
-      depth: obstacle.x + obstacle.y,
-      draw: () => drawWorldObject(obstacle)
+      depth:
+        obstacle.x + obstacle.y,
+      draw: () =>
+        drawWorldObject(obstacle)
     });
   }
 
@@ -1285,24 +1674,34 @@ function drawScene() {
     if (enemy.alive) {
       renderObjects.push({
         depth: enemy.x + enemy.y,
-        draw: () => drawCharacter(enemy)
+        draw: () =>
+          drawCharacter(enemy)
       });
     }
   }
 
   if (guardian.alive) {
     renderObjects.push({
-      depth: guardian.x + guardian.y,
-      draw: () => drawCharacter(guardian, true)
+      depth:
+        guardian.x + guardian.y,
+      draw: () =>
+        drawCharacter(
+          guardian,
+          true
+        )
     });
   }
 
   renderObjects.push({
     depth: player.x + player.y,
-    draw: () => drawCharacter(player)
+    draw: () =>
+      drawCharacter(player)
   });
 
-  renderObjects.sort((a, b) => a.depth - b.depth);
+  renderObjects.sort(
+    (first, second) =>
+      first.depth - second.depth
+  );
 
   for (const object of renderObjects) {
     object.draw();
@@ -1314,8 +1713,15 @@ function drawScene() {
   ctx.restore();
 
   if (gameState.gameOver) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.fillStyle =
+      "rgba(0, 0, 0, 0.65)";
+
+    ctx.fillRect(
+      0,
+      0,
+      window.innerWidth,
+      window.innerHeight
+    );
 
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
@@ -1343,7 +1749,10 @@ function gameLoop(timestamp) {
   }
 
   const deltaTime = Math.min(
-    (timestamp - lastTime) / 1000,
+    Math.max(
+      (timestamp - lastTime) / 1000,
+      0
+    ),
     0.033
   );
 
@@ -1364,135 +1773,430 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
-function startGame() {
+function startGame(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  if (gameStarted) {
+    return;
+  }
+
   gameStarted = true;
 
-  startScreen.classList.remove("active");
-  startScreen.classList.add("hidden");
+  startScreen.classList.remove(
+    "active"
+  );
 
-  gameUI.classList.remove("hidden");
+  startScreen.classList.add(
+    "hidden"
+  );
+
+  gameUI.classList.remove(
+    "hidden"
+  );
 
   showMessage(
-    "Has despertado en las ruinas de Eldoria.",
+    "Muévete con el joystick y derrota al guardián.",
     4
   );
 
   updateInterface();
+  resizeCanvas();
 
   lastTime = performance.now();
+
   requestAnimationFrame(gameLoop);
 }
 
-window.addEventListener("keydown", event => {
-  keys[event.code] = true;
+/* JOYSTICK TÁCTIL */
 
-  if (event.code === "Space") {
-    event.preventDefault();
-    attack();
-  }
-
-  if (event.code === "KeyQ") {
-    castMagic();
-  }
-
-  if (event.code === "KeyE") {
-    interact();
-  }
-});
-
-window.addEventListener("keyup", event => {
-  keys[event.code] = false;
-});
-
-joystickBase.addEventListener("pointerdown", event => {
-  joystick.active = true;
-  joystick.pointerId = event.pointerId;
-
-  joystickBase.setPointerCapture(event.pointerId);
-});
-
-joystickBase.addEventListener("pointermove", event => {
-  if (
-    !joystick.active ||
-    event.pointerId !== joystick.pointerId
+function findTouch(touchList, identifier) {
+  for (
+    let index = 0;
+    index < touchList.length;
+    index++
   ) {
-    return;
+    if (
+      touchList[index].identifier ===
+      identifier
+    ) {
+      return touchList[index];
+    }
   }
 
-  const bounds = joystickBase.getBoundingClientRect();
+  return null;
+}
 
-  const centerX = bounds.left + bounds.width / 2;
-  const centerY = bounds.top + bounds.height / 2;
+function moveJoystick(clientX, clientY) {
+  const bounds =
+    joystickBase.getBoundingClientRect();
 
-  let differenceX = event.clientX - centerX;
-  let differenceY = event.clientY - centerY;
+  const centerX =
+    bounds.left + bounds.width / 2;
 
-  const length = Math.hypot(differenceX, differenceY);
+  const centerY =
+    bounds.top + bounds.height / 2;
 
-  if (length > joystick.radius) {
+  let differenceX =
+    clientX - centerX;
+
+  let differenceY =
+    clientY - centerY;
+
+  const maximumDistance =
+    Math.max(
+      30,
+      bounds.width * 0.34
+    );
+
+  const distanceFromCenter =
+    Math.hypot(
+      differenceX,
+      differenceY
+    );
+
+  if (
+    distanceFromCenter >
+    maximumDistance
+  ) {
     differenceX =
-      differenceX / length * joystick.radius;
+      (
+        differenceX /
+        distanceFromCenter
+      ) *
+      maximumDistance;
 
     differenceY =
-      differenceY / length * joystick.radius;
+      (
+        differenceY /
+        distanceFromCenter
+      ) *
+      maximumDistance;
   }
 
-  joystick.x = differenceX / joystick.radius;
-  joystick.y = differenceY / joystick.radius;
+  joystick.x =
+    differenceX /
+    maximumDistance;
+
+  joystick.y =
+    differenceY /
+    maximumDistance;
 
   joystickStick.style.transform =
     `translate(${differenceX}px, ${differenceY}px)`;
-});
+}
 
-function releaseJoystick(event) {
-  if (
-    event.pointerId !== joystick.pointerId
-  ) {
-    return;
-  }
-
+function resetJoystick() {
   joystick.active = false;
-  joystick.pointerId = null;
   joystick.x = 0;
   joystick.y = 0;
+  activeTouchId = null;
 
   joystickStick.style.transform =
     "translate(0px, 0px)";
 }
 
 joystickBase.addEventListener(
-  "pointerup",
-  releaseJoystick
+  "touchstart",
+  event => {
+    event.preventDefault();
+
+    if (activeTouchId !== null) {
+      return;
+    }
+
+    const touch =
+      event.changedTouches[0];
+
+    if (!touch) {
+      return;
+    }
+
+    activeTouchId =
+      touch.identifier;
+
+    joystick.active = true;
+
+    moveJoystick(
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {
+    passive: false
+  }
 );
 
 joystickBase.addEventListener(
-  "pointercancel",
-  releaseJoystick
+  "touchmove",
+  event => {
+    event.preventDefault();
+
+    if (
+      !joystick.active ||
+      activeTouchId === null
+    ) {
+      return;
+    }
+
+    const touch = findTouch(
+      event.touches,
+      activeTouchId
+    );
+
+    if (!touch) {
+      return;
+    }
+
+    moveJoystick(
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {
+    passive: false
+  }
 );
 
-startButton.addEventListener("click", startGame);
-attackButton.addEventListener("click", attack);
-magicButton.addEventListener("click", castMagic);
-interactButton.addEventListener("click", interact);
-potionButton.addEventListener("click", usePotion);
+joystickBase.addEventListener(
+  "touchend",
+  event => {
+    event.preventDefault();
 
-inventoryButton.addEventListener("click", () => {
-  inventoryPanel.classList.remove("hidden");
-});
+    const touch = findTouch(
+      event.changedTouches,
+      activeTouchId
+    );
 
-closeInventoryButton.addEventListener("click", () => {
-  inventoryPanel.classList.add("hidden");
-});
-
-inventoryPanel.addEventListener("click", event => {
-  if (event.target === inventoryPanel) {
-    inventoryPanel.classList.add("hidden");
+    if (touch) {
+      resetJoystick();
+    }
+  },
+  {
+    passive: false
   }
-});
+);
 
-canvas.addEventListener("contextmenu", event => {
-  event.preventDefault();
-});
+joystickBase.addEventListener(
+  "touchcancel",
+  event => {
+    event.preventDefault();
+    resetJoystick();
+  },
+  {
+    passive: false
+  }
+);
 
+/* MOUSE PARA PROBAR EN COMPUTADOR */
+
+let mouseJoystickActive = false;
+
+joystickBase.addEventListener(
+  "mousedown",
+  event => {
+    event.preventDefault();
+
+    mouseJoystickActive = true;
+    joystick.active = true;
+
+    moveJoystick(
+      event.clientX,
+      event.clientY
+    );
+  }
+);
+
+window.addEventListener(
+  "mousemove",
+  event => {
+    if (!mouseJoystickActive) {
+      return;
+    }
+
+    event.preventDefault();
+
+    moveJoystick(
+      event.clientX,
+      event.clientY
+    );
+  }
+);
+
+window.addEventListener(
+  "mouseup",
+  () => {
+    if (!mouseJoystickActive) {
+      return;
+    }
+
+    mouseJoystickActive = false;
+    resetJoystick();
+  }
+);
+
+/* BOTONES TÁCTILES */
+
+function addGameButtonControl(
+  button,
+  action
+) {
+  let touchTriggered = false;
+
+  button.addEventListener(
+    "touchstart",
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      touchTriggered = true;
+      action();
+    },
+    {
+      passive: false
+    }
+  );
+
+  button.addEventListener(
+    "touchend",
+    event => {
+      event.preventDefault();
+
+      window.setTimeout(() => {
+        touchTriggered = false;
+      }, 350);
+    },
+    {
+      passive: false
+    }
+  );
+
+  button.addEventListener(
+    "click",
+    event => {
+      event.preventDefault();
+
+      if (touchTriggered) {
+        return;
+      }
+
+      action();
+    }
+  );
+}
+
+addGameButtonControl(
+  startButton,
+  startGame
+);
+
+addGameButtonControl(
+  attackButton,
+  attack
+);
+
+addGameButtonControl(
+  magicButton,
+  castMagic
+);
+
+addGameButtonControl(
+  interactButton,
+  interact
+);
+
+addGameButtonControl(
+  potionButton,
+  usePotion
+);
+
+addGameButtonControl(
+  inventoryButton,
+  () => {
+    inventoryPanel.classList.remove(
+      "hidden"
+    );
+
+    resetJoystick();
+  }
+);
+
+addGameButtonControl(
+  closeInventoryButton,
+  () => {
+    inventoryPanel.classList.add(
+      "hidden"
+    );
+  }
+);
+
+inventoryPanel.addEventListener(
+  "touchstart",
+  event => {
+    if (
+      event.target ===
+      inventoryPanel
+    ) {
+      event.preventDefault();
+
+      inventoryPanel.classList.add(
+        "hidden"
+      );
+    }
+  },
+  {
+    passive: false
+  }
+);
+
+inventoryPanel.addEventListener(
+  "click",
+  event => {
+    if (
+      event.target ===
+      inventoryPanel
+    ) {
+      inventoryPanel.classList.add(
+        "hidden"
+      );
+    }
+  }
+);
+
+canvas.addEventListener(
+  "contextmenu",
+  event => {
+    event.preventDefault();
+  }
+);
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (document.hidden) {
+      resetJoystick();
+      lastTime = performance.now();
+    }
+  }
+);
+
+window.addEventListener(
+  "blur",
+  resetJoystick
+);
+
+window.addEventListener(
+  "resize",
+  () => {
+    resizeCanvas();
+
+    if (!gameStarted) {
+      drawScene();
+    }
+  }
+);
+
+resizeCanvas();
 updateInterface();
 drawScene();
