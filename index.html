@@ -5,15 +5,15 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
   >
 
   <meta
     name="description"
-    content="RPG isométrico medieval creado con HTML, CSS y JavaScript."
+    content="RPG isométrico medieval para móviles inspirado en los MMORPG clásicos."
   >
 
-  <meta name="theme-color" content="#090b10">
+  <meta name="theme-color" content="#080b0f">
 
   <title>Crónicas de Eldoria</title>
 
@@ -25,31 +25,52 @@
 
     <canvas
       id="gameCanvas"
-      aria-label="Juego RPG isométrico"
+      aria-label="Mundo isométrico de Crónicas de Eldoria"
     ></canvas>
+
+    <section id="orientation-screen" class="orientation-screen hidden">
+      <div class="orientation-icon">↻</div>
+
+      <h2>Gira tu dispositivo</h2>
+
+      <p>
+        Crónicas de Eldoria está diseñado para jugarse en horizontal.
+      </p>
+    </section>
 
     <section id="start-screen" class="screen active">
       <div class="screen-panel">
-        <p class="eyebrow">RPG ISOMÉTRICO</p>
 
-        <h1>Crónicas de Eldoria</h1>
-
-        <p class="intro-text">
-          Explora las ruinas, combate criaturas y encuentra los secretos
-          ocultos del reino.
+        <p class="eyebrow">
+          RPG ISOMÉTRICO
         </p>
 
-        <button id="start-button" class="main-button" type="button">
-          Comenzar aventura
+        <h1>
+          Crónicas de Eldoria
+        </h1>
+
+        <p class="intro-text">
+          Explora una ciudad de 200 × 200 casillas, mejora tus habilidades,
+          comercia, equipa a tu personaje y enfréntate a los horrores del
+          cementerio.
+        </p>
+
+        <button
+          id="start-button"
+          class="main-button"
+          type="button"
+        >
+          Entrar a Eldoria
         </button>
 
         <p class="controls-note">
-          Usa el control de la pantalla para moverte.
+          Juega con el teléfono en posición horizontal.
         </p>
+
       </div>
     </section>
 
-        <section id="game-ui" class="hidden">
+    <section id="game-ui" class="hidden">
 
       <header id="top-interface">
 
@@ -62,8 +83,21 @@
           <div id="status-information">
 
             <div class="status-heading">
-              <strong id="player-name">Aldren</strong>
-              <span id="player-level">Nivel 1</span>
+
+              <div>
+                <strong id="player-name">
+                  Aldren
+                </strong>
+
+                <span id="player-title">
+                  Aprendiz aventurero
+                </span>
+              </div>
+
+              <span id="gold-display">
+                250 oro
+              </span>
+
             </div>
 
             <div class="bar-container health-container">
@@ -82,42 +116,66 @@
               </span>
             </div>
 
+            <div class="bar-container stamina-container">
+              <div id="stamina-bar" class="status-bar"></div>
+
+              <span id="stamina-text" class="bar-text">
+                80 / 80
+              </span>
+            </div>
+
           </div>
         </div>
 
-        <div id="mission-panel" class="interface-panel">
-          <span class="panel-label">MISIÓN ACTUAL</span>
+        <div id="zone-panel" class="interface-panel">
 
-          <strong id="mission-title">
-            El despertar
+          <span class="panel-label">
+            UBICACIÓN
+          </span>
+
+          <strong id="zone-name">
+            Plaza del Banco
           </strong>
 
-          <p id="mission-description">
-            Encuentra al guardián de las ruinas.
+          <p id="zone-description">
+            El corazón protegido de Eldoria.
           </p>
+
         </div>
 
       </header>
 
-      <div id="interaction-message" class="hidden">
-        <span id="interaction-text">
-          Examinar
-        </span>
-      </div>
+            <section id="skill-notifications" aria-live="polite"></section>
 
-                <aside id="message-log" class="interface-panel">
+      <section id="world-dialogue-layer" aria-live="polite"></section>
+
+      <aside id="message-log" class="interface-panel">
         <p id="game-message">
-          Has despertado en las ruinas de Eldoria.
+          Bienvenido a la ciudad de Eldoria.
         </p>
       </aside>
 
-      <nav id="action-bar" aria-label="Acciones del personaje">
+      <div id="interaction-message" class="hidden">
+        <span id="interaction-text">
+          Hablar
+        </span>
+      </div>
+
+      <section id="mobile-controls" aria-label="Movimiento">
+
+        <div id="joystick-base">
+          <div id="joystick-stick"></div>
+        </div>
+
+      </section>
+
+      <nav id="action-bar" aria-label="Acciones">
 
         <button
           id="attack-button"
-          class="action-button"
+          class="action-button primary-action"
           type="button"
-          aria-label="Atacar"
+          aria-label="Atacar con espada"
         >
           <span class="action-icon">⚔️</span>
           <span class="action-label">Atacar</span>
@@ -127,9 +185,9 @@
           id="magic-button"
           class="action-button"
           type="button"
-          aria-label="Usar magia"
+          aria-label="Lanzar magia"
         >
-          <span class="action-icon">🔥</span>
+          <span class="action-icon">📖</span>
           <span class="action-label">Magia</span>
         </button>
 
@@ -139,7 +197,7 @@
           type="button"
           aria-label="Interactuar"
         >
-          <span class="action-icon">✋</span>
+          <span class="action-icon">💬</span>
           <span class="action-label">Usar</span>
         </button>
 
@@ -147,9 +205,10 @@
           id="potion-button"
           class="action-button"
           type="button"
-          aria-label="Beber poción"
+          aria-label="Usar poción"
         >
           <span class="action-icon">🧪</span>
+
           <span class="action-label">
             <span id="potion-count">3</span>
           </span>
@@ -157,64 +216,616 @@
 
       </nav>
 
-      <section
-        id="mobile-controls"
-        aria-label="Control de movimiento"
-      >
-        <div id="joystick-base">
-          <div id="joystick-stick"></div>
-        </div>
-      </section>
+      <nav id="utility-bar" aria-label="Menús">
 
-                <button
-        id="inventory-button"
-        class="round-button"
-        type="button"
-        aria-label="Abrir inventario"
-      >
-        🎒
-      </button>
+        <button
+          id="inventory-button"
+          class="utility-button"
+          type="button"
+          aria-label="Abrir inventario"
+        >
+          🎒
+        </button>
+
+        <button
+          id="character-button"
+          class="utility-button"
+          type="button"
+          aria-label="Abrir equipamiento"
+        >
+          🛡️
+        </button>
+
+        <button
+          id="skills-button"
+          class="utility-button"
+          type="button"
+          aria-label="Abrir habilidades"
+        >
+          📊
+        </button>
+
+        <button
+          id="map-button"
+          class="utility-button"
+          type="button"
+          aria-label="Abrir mapa"
+        >
+          🗺️
+        </button>
+
+      </nav>
 
       <section id="inventory-panel" class="overlay-panel hidden">
 
-        <div class="overlay-content">
+        <div class="overlay-content wide-panel">
 
           <div class="overlay-header">
-            <h2>Inventario</h2>
+
+            <div>
+              <span class="panel-label">
+                MOCHILA
+              </span>
+
+              <h2>Inventario</h2>
+            </div>
+
+            <div class="header-actions">
+
+              <span id="inventory-gold">
+                250 oro
+              </span>
+
+              <button
+                id="close-inventory-button"
+                class="close-button"
+                type="button"
+                aria-label="Cerrar inventario"
+              >
+                ×
+              </button>
+
+            </div>
+          </div>
+
+          <div id="inventory-grid" class="item-grid"></div>
+
+          <div id="item-details" class="details-panel">
+
+            <h3 id="item-details-name">
+              Selecciona un objeto
+            </h3>
+
+            <p id="item-details-description">
+              Aquí aparecerá la información del objeto.
+            </p>
+
+            <div id="item-details-stats"></div>
+
+            <div class="panel-actions">
+
+              <button
+                id="equip-item-button"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Equipar
+              </button>
+
+              <button
+                id="drop-item-button"
+                class="danger-button"
+                type="button"
+                disabled
+              >
+                Soltar
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+            <section id="character-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content character-window">
+
+          <div class="overlay-header">
+
+            <div>
+              <span class="panel-label">
+                PERSONAJE
+              </span>
+
+              <h2>Equipamiento</h2>
+            </div>
 
             <button
-              id="close-inventory-button"
+              id="close-character-button"
               class="close-button"
               type="button"
-              aria-label="Cerrar inventario"
+              aria-label="Cerrar equipamiento"
             >
               ×
             </button>
-          </div>
-
-          <div id="inventory-grid">
-
-            <button class="inventory-slot" type="button">
-              <span>🗡️</span>
-              <small>Espada</small>
-            </button>
-
-            <button class="inventory-slot" type="button">
-              <span>🧪</span>
-              <small>Poción</small>
-            </button>
-
-            <button class="inventory-slot" type="button">
-              <span>📜</span>
-              <small>Pergamino</small>
-            </button>
-
-            <button class="inventory-slot empty" type="button"></button>
-            <button class="inventory-slot empty" type="button"></button>
-            <button class="inventory-slot empty" type="button"></button>
 
           </div>
+
+          <div class="character-layout">
+
+            <div class="equipment-column">
+
+              <button
+                class="equipment-slot"
+                data-slot="head"
+                type="button"
+              >
+                <span>Cabeza</span>
+                <strong id="equipment-head">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="neck"
+                type="button"
+              >
+                <span>Cuello</span>
+                <strong id="equipment-neck">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="chest"
+                type="button"
+              >
+                <span>Pechera</span>
+                <strong id="equipment-chest">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="arms"
+                type="button"
+              >
+                <span>Brazos</span>
+                <strong id="equipment-arms">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="gloves"
+                type="button"
+              >
+                <span>Guantes</span>
+                <strong id="equipment-gloves">Vacío</strong>
+              </button>
+
+            </div>
+
+            <div id="character-preview">
+              <canvas
+                id="characterCanvas"
+                width="260"
+                height="320"
+              ></canvas>
+            </div>
+
+            <div class="equipment-column">
+
+              <button
+                class="equipment-slot"
+                data-slot="legs"
+                type="button"
+              >
+                <span>Pantalones</span>
+                <strong id="equipment-legs">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="boots"
+                type="button"
+              >
+                <span>Botas</span>
+                <strong id="equipment-boots">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="mainHand"
+                type="button"
+              >
+                <span>Mano principal</span>
+                <strong id="equipment-mainHand">Espada vieja</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="offHand"
+                type="button"
+              >
+                <span>Mano secundaria</span>
+                <strong id="equipment-offHand">Grimorio gastado</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="ring1"
+                type="button"
+              >
+                <span>Anillo izquierdo</span>
+                <strong id="equipment-ring1">Vacío</strong>
+              </button>
+
+              <button
+                class="equipment-slot"
+                data-slot="ring2"
+                type="button"
+              >
+                <span>Anillo derecho</span>
+                <strong id="equipment-ring2">Vacío</strong>
+              </button>
+
+            </div>
+
+          </div>
+
+          <div id="character-stats" class="stats-grid">
+
+            <div>
+              <span>Daño</span>
+              <strong id="stat-damage">6–10</strong>
+            </div>
+
+            <div>
+              <span>Defensa</span>
+              <strong id="stat-defense">0</strong>
+            </div>
+
+            <div>
+              <span>Precisión</span>
+              <strong id="stat-accuracy">55%</strong>
+            </div>
+
+            <div>
+              <span>Daño mágico</span>
+              <strong id="stat-magic-power">8</strong>
+            </div>
+
+            <div>
+              <span>Velocidad</span>
+              <strong id="stat-attack-speed">1.0</strong>
+            </div>
+
+            <div>
+              <span>Resistencia mágica</span>
+              <strong id="stat-magic-resistance">4%</strong>
+            </div>
+
+          </div>
+
         </div>
+      </section>
+
+      <section id="skills-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content wide-panel">
+
+          <div class="overlay-header">
+
+            <div>
+              <span class="panel-label">
+                PROGRESIÓN
+              </span>
+
+              <h2>Habilidades</h2>
+            </div>
+
+            <div class="header-actions">
+
+              <span id="skill-total">
+                Total: 220.0 / 700.0
+              </span>
+
+              <button
+                id="close-skills-button"
+                class="close-button"
+                type="button"
+                aria-label="Cerrar habilidades"
+              >
+                ×
+              </button>
+
+            </div>
+          </div>
+
+          <div class="skills-summary">
+
+            <p>
+              Las habilidades mejoran al utilizarlas. Todas las habilidades
+              de guerrero y mago comienzan en 20.0.
+            </p>
+
+          </div>
+
+          <div id="skills-list"></div>
+
+        </div>
+      </section>
+
+            <section id="shop-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content shop-window">
+
+          <div class="overlay-header">
+
+            <div>
+              <span id="shop-type" class="panel-label">
+                COMERCIANTE
+              </span>
+
+              <h2 id="shop-name">
+                Tienda
+              </h2>
+            </div>
+
+            <div class="header-actions">
+
+              <span id="shop-player-gold">
+                250 oro
+              </span>
+
+              <button
+                id="close-shop-button"
+                class="close-button"
+                type="button"
+                aria-label="Cerrar tienda"
+              >
+                ×
+              </button>
+
+            </div>
+          </div>
+
+          <div class="shop-tabs">
+
+            <button
+              id="shop-buy-tab"
+              class="shop-tab active"
+              type="button"
+            >
+              Comprar
+            </button>
+
+            <button
+              id="shop-sell-tab"
+              class="shop-tab"
+              type="button"
+            >
+              Vender
+            </button>
+
+          </div>
+
+          <div class="shop-layout">
+
+            <div id="shop-items" class="shop-items"></div>
+
+            <div id="shop-details" class="details-panel">
+
+              <h3 id="shop-item-name">
+                Selecciona un objeto
+              </h3>
+
+              <p id="shop-item-description">
+                Revisa su precio y estadísticas.
+              </p>
+
+              <div id="shop-item-stats"></div>
+
+              <button
+                id="shop-confirm-button"
+                class="main-button compact-button"
+                type="button"
+                disabled
+              >
+                Comprar
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <section id="bank-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content bank-window">
+
+          <div class="overlay-header">
+
+            <div>
+              <span class="panel-label">
+                BANCO DE ELDORIA
+              </span>
+
+              <h2>Cofre bancario</h2>
+            </div>
+
+            <button
+              id="close-bank-button"
+              class="close-button"
+              type="button"
+              aria-label="Cerrar banco"
+            >
+              ×
+            </button>
+
+          </div>
+
+          <div class="bank-layout">
+
+            <section>
+
+              <h3>Mochila</h3>
+
+              <div
+                id="bank-inventory-grid"
+                class="item-grid compact-grid"
+              ></div>
+
+            </section>
+
+            <div class="bank-transfer-controls">
+
+              <button
+                id="deposit-item-button"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Guardar →
+              </button>
+
+              <button
+                id="withdraw-item-button"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                ← Retirar
+              </button>
+
+            </div>
+
+            <section>
+
+              <h3>Banco</h3>
+
+              <div
+                id="bank-storage-grid"
+                class="item-grid compact-grid"
+              ></div>
+
+            </section>
+
+          </div>
+
+          <p id="bank-capacity">
+            Espacio bancario: 0 / 60
+          </p>
+
+        </div>
+      </section>
+
+      <section id="map-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content map-window">
+
+          <div class="overlay-header">
+
+            <div>
+              <span class="panel-label">
+                CIUDAD
+              </span>
+
+              <h2>Mapa de Eldoria</h2>
+            </div>
+
+            <button
+              id="close-map-button"
+              class="close-button"
+              type="button"
+              aria-label="Cerrar mapa"
+            >
+              ×
+            </button>
+
+          </div>
+
+          <canvas
+            id="minimapCanvas"
+            width="640"
+            height="400"
+          ></canvas>
+
+          <div class="map-legend">
+
+            <span>● Jugador</span>
+            <span>◆ Banco</span>
+            <span>■ Comerciantes</span>
+            <span>✦ Cementerio</span>
+            <span>★ Enemigo especial</span>
+
+          </div>
+
+        </div>
+      </section>
+
+      <section id="loot-panel" class="overlay-panel hidden">
+
+        <div class="overlay-content loot-window">
+
+          <div class="overlay-header">
+
+            <div>
+              <span class="panel-label">
+                BOTÍN
+              </span>
+
+              <h2>Objetos encontrados</h2>
+            </div>
+
+            <button
+              id="close-loot-button"
+              class="close-button"
+              type="button"
+              aria-label="Cerrar botín"
+            >
+              ×
+            </button>
+
+          </div>
+
+          <div id="loot-items" class="loot-items"></div>
+
+          <div class="panel-actions">
+
+            <button
+              id="take-selected-loot-button"
+              class="secondary-button"
+              type="button"
+              disabled
+            >
+              Recoger
+            </button>
+
+            <button
+              id="take-all-loot-button"
+              class="main-button compact-button"
+              type="button"
+            >
+              Recoger todo
+            </button>
+
+          </div>
+
+        </div>
+      </section>
+
+      <section id="special-enemy-alert" class="special-alert hidden">
+
+        <strong>
+          Una presencia poderosa ha despertado
+        </strong>
+
+        <span id="special-enemy-message">
+          Un enemigo especial apareció en el cementerio.
+        </span>
+
       </section>
 
     </section>
