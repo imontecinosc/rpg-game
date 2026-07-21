@@ -1,221 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
-<title>Medieval RPG</title>
 
-<style>
-body{
-    margin:0;
-    background:#111;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-canvas{
-    border:3px solid #444;
-    image-rendering:pixelated;
-}
-</style>
+<title>Ultima RPG</title>
+
+<link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-<canvas id="game" width="800" height="500"></canvas>
+<canvas id="game"></canvas>
 
-<script>
-
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-
-
-let player={
-    x:380,
-    y:230,
-    speed:3,
-    gold:0,
-    direction:"down"
-};
-
-
-let keys={};
-
-
-document.addEventListener("keydown",e=>{
-    keys[e.key]=true;
-});
-
-document.addEventListener("keyup",e=>{
-    keys[e.key]=false;
-});
-
-
-// PERSONAJE PIXEL ART
-
-function drawPlayer(){
-
-let x=player.x;
-let y=player.y;
-
-
-// sombra
-ctx.fillStyle="rgba(0,0,0,.3)";
-ctx.fillRect(x+8,y+45,30,8);
-
-
-// capa
-ctx.fillStyle="#5b1a1a";
-ctx.fillRect(x+8,y+20,35,30);
-
-
-// cuerpo armadura
-ctx.fillStyle="#777";
-ctx.fillRect(x+15,y+25,22,25);
-
-
-// cinturón
-ctx.fillStyle="#8b5a2b";
-ctx.fillRect(x+15,y+37,22,5);
-
-
-// cabeza
-ctx.fillStyle="#f2c29b";
-ctx.fillRect(x+17,y+5,20,20);
-
-
-// pelo
-ctx.fillStyle="#3b2412";
-ctx.fillRect(x+17,y+5,20,7);
-
-
-// piernas
-ctx.fillStyle="#333";
-ctx.fillRect(x+15,y+50,8,15);
-ctx.fillRect(x+29,y+50,8,15);
-
-
-// botas
-ctx.fillStyle="#111";
-ctx.fillRect(x+13,y+63,12,5);
-ctx.fillRect(x+28,y+63,12,5);
-
-
-// espada
-ctx.fillStyle="#ddd";
-ctx.fillRect(x+40,y+28,5,25);
-
-ctx.fillStyle="#8b5a2b";
-ctx.fillRect(x+36,y+25,14,5);
-
-
-}
-
-
-// árbol
-
-function drawTree(x,y){
-
-ctx.fillStyle="#5b3215";
-ctx.fillRect(x+18,y+30,12,35);
-
-ctx.fillStyle="#176b2c";
-ctx.beginPath();
-ctx.arc(x+25,y+25,30,0,Math.PI*2);
-ctx.fill();
-
-}
-
-
-// mapa
-
-let trees=[
-{x:120,y:100},
-{x:600,y:180},
-{x:250,y:350}
-];
-
-
-
-function update(){
-
-if(keys["w"]){
-player.y-=player.speed;
-player.direction="up";
-}
-
-if(keys["s"]){
-player.y+=player.speed;
-player.direction="down";
-}
-
-if(keys["a"]){
-player.x-=player.speed;
-player.direction="left";
-}
-
-if(keys["d"]){
-player.x+=player.speed;
-player.direction="right";
-}
-
-
-}
-
-
-
-function draw(){
-
-// pasto
-
-ctx.fillStyle="#3c7d3c";
-ctx.fillRect(0,0,800,500);
-
-
-// árboles
-
-trees.forEach(t=>{
-drawTree(t.x,t.y);
-});
-
-
-// personaje
-
-drawPlayer();
-
-
-// interfaz
-
-ctx.fillStyle="white";
-ctx.font="18px Arial";
-
-ctx.fillText(
-"Guerrero medieval | Oro: "+player.gold,
-20,30
-);
-
-ctx.fillText(
-"WASD para moverte",
-20,470
-);
-
-
-}
-
-
-function loop(){
-
-update();
-draw();
-
-requestAnimationFrame(loop);
-
-}
-
-loop();
-
-</script>
+<script src="game.js"></script>
 
 </body>
+
 </html>
