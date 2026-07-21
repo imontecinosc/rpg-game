@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080b10">
+  <title>Proyecto Ultra</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game">
+    <canvas id="gameCanvas"></canvas>
+
+    <section id="rotateScreen" class="overlay hidden">
+      <div class="rotate-card">
+        <div class="rotate-icon">↻</div>
+        <h2>Gira tu teléfono</h2>
+        <p>Proyecto Ultra está diseñado para jugarse en horizontal.</p>
+      </div>
+    </section>
+
+    <section id="startScreen" class="overlay">
+      <div class="start-card">
+        <p class="eyebrow">RPG ISOMÉTRICO</p>
+        <h1>Proyecto Ultra</h1>
+        <p>Explora Eldoria, mejora tus habilidades, consigue botín y equipa a tu personaje.</p>
+        <button id="startButton" class="gold-button" type="button">Entrar al mundo</button>
+      </div>
+    </section>
+
+    <section id="hud" class="hidden">
+      <header id="topHud">
+        <div class="hud-card player-card">
+          <div class="portrait">🧙</div>
+          <div class="player-info">
+            <div class="player-line">
+              <div>
+                <strong>Aldren</strong>
+                <small id="playerTitle">Aprendiz aventurero</small>
+              </div>
+              <span id="goldText">250 oro</span>
+            </div>
+            <div class="bar"><div id="healthBar" class="fill health"></div><span id="healthText"></span></div>
+            <div class="bar"><div id="manaBar" class="fill mana"></div><span id="manaText"></span></div>
+            <div class="bar"><div id="staminaBar" class="fill stamina"></div><span id="staminaText"></span></div>
+          </div>
+        </div>
+
+        <div class="hud-card zone-card">
+          <small>UBICACIÓN</small>
+          <strong id="zoneName">Plaza del Banco</strong>
+          <span id="zoneDescription">El centro seguro de Eldoria.</span>
+        </div>
+      </header>
+
+      <div id="skillToastContainer"></div>
+      <div id="messageBox">Bienvenido a Proyecto Ultra.</div>
+      <div id="interactionHint" class="hidden">Usar</div>
+
+      <div id="utilityButtons">
+        <button id="inventoryButton" type="button">🎒</button>
+        <button id="equipmentButton" type="button">🛡️</button>
+        <button id="skillsButton" type="button">📊</button>
+        <button id="mapButton" type="button">🗺️</button>
+      </div>
+
+      <div id="joystick">
+        <div id="joystickKnob"></div>
+      </div>
+
+      <div id="actionButtons">
+        <button id="attackButton" class="action primary" type="button"><span>⚔️</span><small>Atacar</small></button>
+        <button id="magicButton" class="action" type="button"><span>📖</span><small>Magia</small></button>
+        <button id="interactButton" class="action" type="button"><span>💬</span><small>Usar</small></button>
+        <button id="potionButton" class="action" type="button"><span>🧪</span><small id="potionText">3</small></button>
+      </div>
+    </section>
+
+    <section id="inventoryPanel" class="panel-overlay hidden">
+      <div class="panel wide">
+        <div class="panel-header">
+          <div><small>MOCHILA</small><h2>Inventario</h2></div>
+          <button class="close" data-close="inventoryPanel" type="button">×</button>
+        </div>
+        <div class="inventory-layout">
+          <div>
+            <div id="inventoryGrid" class="inventory-grid"></div>
+            <p id="inventoryCapacity">0 / 30 objetos</p>
+          </div>
+          <div id="inventoryDetails" class="details">
+            <h3>Selecciona un objeto</h3>
+            <p>Aquí aparecerán sus estadísticas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipmentPanel" class="panel-overlay hidden">
+      <div class="panel equipment-panel">
+        <div class="panel-header">
+          <div><small>PERSONAJE</small><h2>Equipamiento</h2></div>
+          <button class="close" data-close="equipmentPanel" type="button">×</button>
+        </div>
+
+        <div class="equipment-main">
+          <div class="equipment-slots">
+            <button class="slot" data-slot="head" type="button"><span>Cabeza</span><strong id="slot-head">Vacío</strong></button>
+            <button class="slot" data-slot="neck" type="button"><span>Cuello</span><strong id="slot-neck">Vacío</strong></button>
+            <button class="slot" data-slot="chest" type="button"><span>Pechera</span><strong id="slot-chest">Vacío</strong></button>
+            <button class="slot" data-slot="arms" type="button"><span>Brazos</span><strong id="slot-arms">Vacío</strong></button>
+            <button class="slot" data-slot="gloves" type="button"><span>Guantes</span><strong id="slot-gloves">Vacío</strong></button>
+          </div>
+
+          <div class="character-preview-wrap">
+            <canvas id="characterCanvas" width="260" height="330"></canvas>
+          </div>
+
+          <div class="equipment-slots">
+            <button class="slot" data-slot="legs" type="button"><span>Pantalones</span><strong id="slot-legs">Vacío</strong></button>
+            <button class="slot" data-slot="boots" type="button"><span>Botas</span><strong id="slot-boots">Vacío</strong></button>
+            <button class="slot" data-slot="mainHand" type="button"><span>Mano principal</span><strong id="slot-mainHand">Espada vieja</strong></button>
+            <button class="slot" data-slot="offHand" type="button"><span>Mano secundaria</span><strong id="slot-offHand">Grimorio gastado</strong></button>
+            <button class="slot" data-slot="ring1" type="button"><span>Anillo izquierdo</span><strong id="slot-ring1">Vacío</strong></button>
+            <button class="slot" data-slot="ring2" type="button"><span>Anillo derecho</span><strong id="slot-ring2">Vacío</strong></button>
+          </div>
+        </div>
+
+        <div class="equipment-inventory-section">
+          <div class="equipment-inventory-header">
+            <h3>Inventario para equipar</h3>
+            <span id="equipmentInventoryCapacity">0 / 30</span>
+          </div>
+          <div id="equipmentInventoryGrid" class="inventory-grid compact"></div>
+        </div>
+
+        <div id="equipmentDetails" class="details equipment-details">
+          <h3>Selecciona una pieza</h3>
+          <p>Puedes equipar desde el inventario o pulsar un slot para desequipar.</p>
+        </div>
+
+        <div class="stats-row">
+          <div><span>Daño</span><strong id="statDamage">0–0</strong></div>
+          <div><span>Defensa</span><strong id="statDefense">0</strong></div>
+          <div><span>Precisión</span><strong id="statAccuracy">0%</strong></div>
+          <div><span>Poder mágico</span><strong id="statMagic">0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="skillsPanel" class="panel-overlay hidden">
+      <div class="panel wide">
+        <div class="panel-header">
+          <div><small>PROGRESIÓN</small><h2>Habilidades</h2></div>
+          <button class="close" data-close="skillsPanel" type="button">×</button>
+        </div>
+        <div id="skillsList" class="skills-list"></div>
+      </div>
+    </section>
+
+    <section id="shopPanel" class="panel-overlay hidden">
+      <div class="panel wide">
+        <div class="panel-header">
+          <div><small>COMERCIANTE</small><h2 id="shopTitle">Tienda</h2></div>
+          <button class="close" data-close="shopPanel" type="button">×</button>
+        </div>
+        <div class="shop-layout">
+          <div id="shopItems" class="shop-items"></div>
+          <div id="shopDetails" class="details"><h3>Selecciona un objeto</h3></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bankPanel" class="panel-overlay hidden">
+      <div class="panel wide">
+        <div class="panel-header">
+          <div><small>BANCO DE ELDORIA</small><h2>Almacén</h2></div>
+          <button class="close" data-close="bankPanel" type="button">×</button>
+        </div>
+        <div class="bank-layout">
+          <div><h3>Mochila</h3><div id="bankInventoryGrid" class="inventory-grid compact"></div></div>
+          <div><h3>Banco</h3><div id="bankStorageGrid" class="inventory-grid compact"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mapPanel" class="panel-overlay hidden">
+      <div class="panel map-panel">
+        <div class="panel-header">
+          <div><small>ELDORIA</small><h2>Mapa</h2></div>
+          <button class="close" data-close="mapPanel" type="button">×</button>
+        </div>
+        <canvas id="minimapCanvas" width="700" height="420"></canvas>
+      </div>
+    </section>
+
+    <section id="lootPanel" class="panel-overlay hidden">
+      <div class="panel loot-panel">
+        <div class="panel-header">
+          <div><small>BOTÍN</small><h2>Objetos encontrados</h2></div>
+          <button class="close" data-close="lootPanel" type="button">×</button>
+        </div>
+        <div id="lootItems" class="shop-items"></div>
+        <button id="takeAllLootButton" class="gold-button bottom-button" type="button">Recoger todo</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
