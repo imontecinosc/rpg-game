@@ -1,0 +1,1 @@
+export class Camera{constructor(canvas,world){this.canvas=canvas;this.world=world;this.x=0;this.y=0}update(target){this.x=Math.max(0,Math.min(this.world.width-this.canvas.width,target.x-this.canvas.width/2));this.y=Math.max(0,Math.min(this.world.height-this.canvas.height,target.y-this.canvas.height/2))}}
