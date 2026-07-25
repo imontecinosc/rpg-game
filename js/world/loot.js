@@ -1,1 +1,0 @@
-export function enemyLoot(enemy){if(enemy.type==='troll')return [{id:'troll_hide',qty:2+Math.floor(Math.random()*3)},{id:'gold',qty:35+Math.floor(Math.random()*60)}];return [{id:'gold',qty:12+Math.floor(Math.random()*25)},{id:Math.random()<.35?'bandage':'iron_ore',qty:1+Math.floor(Math.random()*3)}]}
