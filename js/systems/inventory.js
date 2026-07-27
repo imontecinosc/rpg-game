@@ -1,0 +1,9 @@
+(function(U){
+  function uid(){return (crypto.randomUUID&&crypto.randomUUID())||Math.random().toString(36).slice(2)}
+  U.addItem=function(id,qty=1,to=U.player.inventory){const d=U.itemDefs[id];if(!d)return false;if(d.stack){const f=to.find(i=>i.id===id);if(f){f.qty=(f.qty||1)+qty;return true}to.push({id,qty,insured:false,uid:uid()});return true}for(let n=0;n<qty;n++)to.push({id,qty:1,insured:false,uid:uid()});return true};
+  U.countItem=(id,from=U.player.inventory)=>from.filter(i=>i.id===id).reduce((s,i)=>s+(i.qty||1),0);
+  U.removeItem=function(id,qty=1,from=U.player.inventory){for(let i=from.length-1;i>=0&&qty>0;i--){const it=from[i];if(it.id!==id)continue;const take=Math.min(qty,it.qty||1);it.qty=(it.qty||1)-take;qty-=take;if(it.qty<=0)from.splice(i,1)}return qty===0};
+  U.normalizeInventory=function(){const src=[...U.player.inventory],out=[];for(const it of src){if(!U.itemDefs[it.id])continue;const q=Math.max(1,Number(it.qty)||1);if(U.itemDefs[it.id].stack){const f=out.find(x=>x.id===it.id);if(f)f.qty+=q;else out.push({...it,qty:q})}else for(let n=0;n<q;n++)out.push({...it,qty:1,uid:it.uid||uid()})}U.player.inventory=out;};
+  U.equip=function(i){const it=U.player.inventory[i],d=it&&U.itemDefs[it.id];if(!d||!d.slot)return;let slot=d.slot;if(slot==='ring1'&&U.player.equipment.ring1)slot='ring2';if(d.twoHand&&U.player.equipment.shield){U.player.inventory.push(U.player.equipment.shield);delete U.player.equipment.shield}if(slot==='shield'&&U.player.equipment.weapon&&U.itemDefs[U.player.equipment.weapon.id].twoHand)return U.toast('Un arma a dos manos impide usar escudo.');if(U.player.equipment[slot])U.player.inventory.push(U.player.equipment[slot]);U.player.equipment[slot]=it;U.player.inventory.splice(i,1);U.ui.refreshAll()};
+  U.unequip=function(slot){if(!U.player.equipment[slot])return;U.player.inventory.push(U.player.equipment[slot]);delete U.player.equipment[slot];U.ui.refreshAll()};
+})(window.Ultra=window.Ultra||{});
