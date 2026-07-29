@@ -1,0 +1,201 @@
+:root {
+  /* Paleta: pizarra fria con laton apagado. Los nombres viejos se conservan
+  para que las reglas existentes sigan funcionando con los valores nuevos. */
+  --bg: #15171b;
+  --panel: rgba(21, 23, 27, 0.97);
+  --panel2: #2a2e36;
+  --line: #6d5833;
+  --text: #e6ddcb;
+  --muted: #8d8878;
+  --gold: #a8874f;
+  --red: #7a1f1a;
+  --blue: #24506e;
+  --green: #417b4c;
+  --purple: #654184;
+
+  /* Materiales */
+  --iron: #15171b;
+  --slate: #1d2027;
+  --stone: #2a2e36;
+  --stone-lit: #343943;
+  --brass: #a8874f;
+  --brass-lit: #c9a765;
+  --brass-dim: #6d5833;
+  --ghost: #5d5b54;
+  --blood-lit: #b8332a;
+  --frost-lit: #3d7ea8;
+
+  /* Tipografia y medidas */
+  --display: 'Cinzel', Georgia, serif;
+  --body: 'Alegreya Sans', 'Trebuchet MS', sans-serif;
+  --slot: 44px;
+}
+* {
+  box-sizing: border-box;
+}
+/* El atributo hidden tiene que ganarle a cualquier display propio. Sin esto,
+una regla con selector de id (#death-veil { display: grid }) le gana a la
+regla [hidden] del navegador y el elemento queda visible para siempre. */
+[hidden] {
+  display: none !important;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--text);
+  font-family: var(--body);
+  font-variant-numeric: tabular-nums;
+  touch-action: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: linear-gradient(180deg, var(--stone-lit), var(--stone));
+  border: 1px solid var(--brass-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:hover {
+  border-color: var(--brass);
+}
+button:focus-visible {
+  outline: 2px solid var(--brass-lit);
+  outline-offset: 1px;
+}
+button:active,
+.pressed {
+  transform: translateY(1px);
+  filter: brightness(1.16);
+}
+button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+#game-shell,
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#game {
+  image-rendering: pixelated;
+  background: #182018;
+}
+#error-box {
+  position: absolute;
+  z-index: 99;
+  inset: 20px;
+  background: #290f0f;
+  color: #fff;
+  padding: 20px;
+  border: 2px solid #d66;
+  overflow: auto;
+}
+.hud-layer {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+}
+.hud-layer button {
+  pointer-events: auto;
+}
+/* FIX jugabilidad: los toasts vivían centrados horizontalmente a la altura
+   de la cámara (top:112px; left:50%), que es justo donde el juego centra
+   al personaje. Con varios avisos seguidos (misión, combate, subida de
+   skill) la pila crecía hacia abajo y tapaba la vida, el objetivo y a los
+   enemigos. Ahora cuelgan del borde derecho, fuera de la zona de juego, y
+   se acomodan de abajo hacia arriba para que el más nuevo no salte encima
+   del contenido viejo. */
+#toasts {
+  position: fixed;
+  z-index: 20;
+  top: auto;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  right: max(10px, env(safe-area-inset-right));
+  left: auto;
+  transform: none;
+  width: min(280px, 70vw);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  pointer-events: none;
+  max-height: 46vh;
+  overflow: hidden;
+}
+.toast {
+  background: #171410ec;
+  border: 1px solid #977b50;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: right;
+  animation: fade 2.8s forwards;
+}
+@keyframes fade {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (pointer: coarse), (max-width: 900px) {
+  #toasts {
+    bottom: calc(190px + env(safe-area-inset-bottom));
+    width: min(240px, 62vw);
+  }
+}
+
+button.selected,
+.top-buttons button.selected,
+.inv-slot.selected,
+.equip-slot.selected {
+  border-color: #f0c567 !important;
+  background: linear-gradient(#6a5130, #362615) !important;
+  box-shadow:
+    0 0 0 2px #f0c56766 inset,
+    0 0 10px #f0c56733;
+}
+.spell.active,
+.action.auto,
+.action.battle {
+  border-color: #f0c567 !important;
+  box-shadow: 0 0 0 2px #f0c56755 inset;
+}
+.inv-slot.selected small,
+.equip-slot.selected {
+  color: #fff2cf;
+}
+
+/* ---------- Piel V7.9: tipografia grabada y marcos forjados ---------- */
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--brass-lit);
+}
+.toast {
+  border-radius: 2px;
+  border-color: var(--brass-dim);
+  background: #171a1fee;
+  font-family: var(--body);
+}
+button.selected,
+.top-buttons button.selected,
+.inv-slot.selected,
+.equip-slot.selected {
+  border-color: var(--brass-lit) !important;
+  background: linear-gradient(180deg, #6d5833, #4a3c22) !important;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.55),
+    0 0 0 2px var(--brass-lit);
+}
