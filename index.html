@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+ <meta name="theme-color" content="#10100f" />
+ <title>Proyecto Ultra V7.32 · Personajes y animaciones V8</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com" />
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+ <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+ <link rel="stylesheet" href="./css/base.css?v=732" />
+ <link rel="stylesheet" href="./css/hud.css?v=734" />
+ <link rel="stylesheet" href="./css/dialogs.css?v=728" />
+</head>
+<body>
+ <main id="game-shell">
+ <canvas id="game" aria-label="Proyecto Ultra"></canvas>
+ <div id="error-box" hidden></div>
+
+ <header id="hud-top" class="hud-layer">
+ <section id="player-status" class="player-status expanded">
+ <button id="portrait-btn" class="portrait" aria-label="Abrir ficha del personaje">IM</button>
+ <div class="player-summary">
+ <div class="identity-row"><strong id="player-name">Pitiao</strong><span id="player-state">Paz</span><button id="collapse-status" title="Contraer panel">−</button></div>
+ <div class="bars">
+ <div class="bar hp"><span>Vida</span><i id="hp-fill"></i><b id="hp-text"></b></div>
+ <div class="bar mana"><span>Maná</span><i id="mana-fill"></i><b id="mana-text"></b></div>
+ <div class="bar stam"><span>Aguante</span><i id="stam-fill"></i><b id="stam-text"></b></div>
+ </div>
+ <div id="quick-stats" class="quick-stats"><span>FUE <b id="str-value">50</b></span><span>DES <b id="dex-value">50</b></span><span>INT <b id="int-value">20</b></span><span>⚖ <b id="weight-value">0/100</b></span><span>🪙 <b id="gold-value">0</b></span></div>
+ <div id="quick-skills" class="quick-skills"></div>
+ <div class="skill-cap-line"><span>Skills · cap 700</span><b id="hud-skill-total">0</b></div>
+ </div>
+ </section>
+ <nav class="top-buttons" aria-label="Menús">
+ <button id="skills-btn" title="Habilidades">📜</button>
+ <button id="inventory-btn" title="Inventario">🎒</button>
+ <button id="craft-btn" title="Artesanía">⚒️</button>
+ <button id="world-btn" title="Mapa">🗺️</button>
+ <button id="settings-btn" title="Ajustes">⚙️</button>
+ </nav>
+ </header>
+
+ <div id="target-card" hidden><strong id="target-name"></strong><span id="target-hp"></span><em id="auto-status"></em></div>
+ <div id="location-card"><strong id="location-name">Valdoria</strong><span id="coords"></span></div>
+
+ <aside id="quest-tracker" class="hud-layer" aria-live="polite">
+ <div class="quest-kicker">MISIÓN PRINCIPAL</div>
+ <strong id="quest-title">La caravana de Hierrogris</strong>
+ <p id="quest-objective">Habla con Edric, administrador de Valdoria.</p>
+ <div class="quest-progress"><i id="quest-progress-fill"></i></div>
+ <small id="quest-hint">Busca el símbolo dorado dentro de la ciudad.</small>
+ </aside>
+
+ <div id="cast-bar" class="hud-layer" hidden>
+ <b id="cast-name"></b>
+ <div class="cast-track"><i id="cast-fill"></i></div>
+ </div>
+
+ <div id="activity-bar" class="hud-layer" hidden aria-live="polite">
+ <div class="activity-heading"><b id="activity-name">Acción</b><span id="activity-time"></span></div>
+ <div class="activity-track"><i id="activity-fill"></i></div>
+ <small id="activity-status"></small>
+ <button id="activity-cancel" type="button">Cancelar</button>
+ </div>
+
+ <nav id="camera-controls" class="hud-layer" aria-label="Controles de cámara">
+ <button id="zoom-out" type="button" aria-label="Alejar cámara">−</button>
+ <button id="zoom-reset" type="button" aria-label="Restaurar cámara"><span id="zoom-value">100%</span></button>
+ <button id="zoom-in" type="button" aria-label="Acercar cámara">+</button>
+ </nav>
+
+ <section id="minimap-panel" class="hud-layer" aria-label="Minimapa">
+ <button id="minimap-toggle" type="button" aria-label="Plegar minimapa">−</button>
+ <canvas id="minimap" width="176" height="116"></canvas>
+ <span id="minimap-zone">Valdoria</span>
+ </section>
+
+ <section id="hud-bottom" class="hud-layer">
+ <div id="joystick"><div id="stick"></div></div>
+ <div id="spell-strip"></div>
+ <div class="action-cluster">
+ <div class="side-actions">
+ <button id="cycle-target" type="button" aria-label="Marcar el enemigo o NPC más cercano">🎯<span>Objetivo cercano</span></button>
+ <div id="specials">
+ <button id="special-60" disabled>60</button>
+ <button id="special-80" disabled>80</button>
+ </div>
+ </div>
+ <div class="actions">
+ <button id="battle-btn" class="action peace">🛡️<span>Paz</span></button>
+ <button id="attack-btn" class="action" hidden>⚔️<span>Autoataque</span></button>
+ <button id="heal-btn" class="action">✚<span>Venda</span></button>
+ <button id="use-btn" class="action">✋<span>Usar</span></button>
+ <button id="potion-btn" class="action">🧪<span>Poción</span><b id="potion-count">0</b></button>
+ </div>
+ </div>
+ </section>
+
+ <div id="death-veil" hidden aria-live="assertive">
+ <strong>Has muerto</strong>
+ <span>Tus objetos quedaron en tu cadáver</span>
+ </div>
+
+ <aside id="toasts" aria-live="polite"></aside><aside id="level-notices" aria-live="polite"></aside>
+
+
+ <dialog id="character-dialog" class="game-dialog wide">
+ <header><h2>Ficha del personaje</h2><button data-close>✕</button></header>
+ <div class="character-sheet">
+ <section class="character-overview">
+ <div class="character-avatar">IM</div>
+ <div><h3 id="character-name">Pitiao</h3><p id="character-condition">Estado: Paz</p><p id="character-location">Valdoria</p></div>
+ </section>
+ <section class="character-grid">
+ <div class="stat-card"><span>Fuerza</span><b id="sheet-str">50</b></div>
+ <div class="stat-card"><span>Destreza</span><b id="sheet-dex">50</b></div>
+ <div class="stat-card"><span>Inteligencia</span><b id="sheet-int">20</b></div>
+ <div class="stat-card"><span>Armadura</span><b id="sheet-armor">0</b></div>
+ <div class="stat-card"><span>Daño</span><b id="sheet-damage">0</b></div>
+ <div class="stat-card"><span>Carga</span><b id="sheet-weight">0/100</b></div>
+ <div class="stat-card"><span>Oro transportado</span><b id="sheet-gold">0</b></div>
+ <div class="stat-card"><span>Total de skills</span><b id="sheet-skill-cap">0 / 700</b></div>
+ </section>
+ <section><h3>Habilidades dominantes</h3><div id="sheet-top-skills" class="sheet-skill-list"></div></section>
+ <section><h3>Estado y efectos</h3><div id="sheet-effects" class="list-card">Sin efectos activos.</div></section>
+ </div>
+ </dialog>
+
+ <dialog id="inventory-dialog" class="game-dialog wide">
+ <header><h2>Personaje, equipo e inventario</h2><button data-close>✕</button></header>
+ <div class="equipment-layout">
+ <section class="paperdoll-panel">
+ <div class="pd-fila">
+ <div class="pd-col" id="equip-col-izq"></div>
+ <div class="pd-marco">
+ <canvas id="paperdoll" width="260" height="440" aria-label="Personaje equipado"></canvas>
+ </div>
+ <div class="pd-col" id="equip-col-der"></div>
+ </div>
+ <div class="pd-manos" id="equip-col-manos"></div>
+ <div class="pd-resumen" id="equip-resumen"></div>
+ </section>
+ <section class="inventory-panel">
+ <div class="toolbar"><span id="inventory-slots"></span><button id="sort-btn">Ordenar</button></div>
+ <div id="inventory-grid"></div>
+ </section>
+ <aside id="item-detail">Selecciona un objeto.</aside>
+ </div>
+ </dialog>
+
+ <dialog id="skills-dialog" class="game-dialog wide">
+ <header><h2>Habilidades</h2><button data-close>✕</button></header>
+ <div class="skill-head"><b id="skill-total"></b><span>Máximo 100 por habilidad · máximo 700 en total. ↓ libera puntos gradualmente.</span></div>
+ <div id="skills-list"></div>
+ </dialog>
+
+ <dialog id="craft-dialog" class="game-dialog wide">
+ <header><h2>Artesanía y recolección</h2><button data-close>✕</button></header>
+ <div class="craft-layout"><nav id="craft-tabs"></nav><section id="recipe-list"></section></div>
+ </dialog>
+
+ <dialog id="world-dialog" class="game-dialog wide">
+ <header><h2>Mapa del mundo</h2><button data-close>✕</button></header>
+ <div class="map-wrap"><canvas id="world-map" width="920" height="560"></canvas><div class="map-legend">● Pitiao &nbsp; ◆ Ciudad &nbsp; ▲ Mazmorra &nbsp; ◉ Recurso &nbsp; ━ Camino</div></div>
+ <div id="map-info" class="map-info">Toca una ciudad o mazmorra para ver información.</div>
+ </dialog>
+
+
+ <dialog id="bank-dialog" class="game-dialog wide">
+ <header><h2>Banco de cuenta</h2><button data-close>✕</button></header>
+ <div class="bank-layout">
+ <section><h3>Tu inventario</h3><div id="bank-inventory" class="bank-grid"></div></section>
+ <section class="transfer-panel"><div id="bank-detail" class="selection-detail">Selecciona un objeto.</div><button id="bank-transfer-btn" disabled>Transferir</button></section>
+ <section><h3>Objetos depositados</h3><div id="bank-storage" class="bank-grid"></div></section>
+ </div>
+ </dialog>
+
+ <dialog id="vendor-dialog" class="game-dialog wide">
+ <header><h2 id="vendor-title">Comerciante</h2><button data-close>✕</button></header>
+ <div class="vendor-layout">
+ <section><h3>Comprar</h3><div id="vendor-buy" class="vendor-grid"></div></section>
+ <section class="transfer-panel"><div id="vendor-detail" class="selection-detail">Selecciona un objeto.</div><button id="vendor-action-btn" disabled>Comprar</button></section>
+ <section><h3>Vender</h3><div id="vendor-sell" class="vendor-grid"></div></section>
+ </div>
+ </dialog>
+
+ <dialog id="corpse-dialog" class="game-dialog">
+ <header><h2>Cadáver</h2><button data-close>✕</button></header>
+ <div class="loot-layout"><div id="corpse-items" class="item-grid"></div><aside id="corpse-detail" class="selection-detail">Selecciona un objeto para ver sus características.</aside></div>
+ <div class="detail-actions"><button id="loot-all-btn">Recoger todo</button></div>
+ </dialog>
+
+ <dialog id="settings-dialog" class="game-dialog">
+ <header><h2>Ajustes y controles</h2><button data-close>✕</button></header>
+ <div class="settings-list">
+ <p><b>PC:</b> clic derecho mover · clic izquierdo seleccionar/accionar · WASD/Flechas mover · Tab Paz/Batalla · Espacio autoataque · 1–6 hechizos · E usar · I inventario · K skills · C crafting · M mapa.</p>
+ <label><input id="sound-muted" type="checkbox" /> Silenciar sonidos</label>
+ <label>Volumen <input id="sound-volume" type="range" min="0" max="100" value="65" /></label>
+ <button id="save-btn">Guardar partida</button>
+ <button id="load-btn">Cargar partida</button>
+ <button id="export-save-btn">Exportar partida</button>
+ <button id="import-save-btn">Importar partida</button>
+ <input id="import-save-file" type="file" accept="application/json,.json" hidden />
+ <div id="save-status" class="save-status">Guardado automático activo.</div>
+ <div id="balance-summary" class="balance-summary">Estadísticas de recompensas: sin datos todavía.</div>
+ <button id="reset-btn">Reiniciar partida</button>
+ </div>
+ </dialog>
+
+ <dialog id="quest-dialog" class="game-dialog quest-dialog">
+ <header><h2 id="quest-dialog-title">La caravana de Hierrogris</h2><button data-close>✕</button></header>
+ <div id="quest-dialog-body" class="quest-dialog-body"></div>
+ <div id="quest-dialog-actions" class="quest-dialog-actions"></div>
+ </dialog>
+ </main>
+
+ <script src="./js/data/skills.js?v=728"></script>
+ <script src="./js/data/items.js?v=728"></script>
+ <script src="./js/data/world.js?v=728"></script>
+ <script src="./js/core/state.js?v=734"></script>
+ <script src="./js/core/sound.js?v=728"></script>
+ <script src="./js/systems/inventory.js?v=728"></script>
+ <script src="./js/systems/combat.js?v=734"></script>
+ <script src="./js/systems/magic.js?v=728"></script>
+ <script src="./js/systems/crafting.js?v=728"></script>
+ <script src="./js/systems/world-services.js?v=734"></script>
+ <script src="./js/core/input.js?v=731"></script>
+ <script src="./js/core/characterAdapter.js?v=733"></script>
+ <script src="./js/core/westerosRenderer.js?v=733"></script>
+ <script src="./js/core/render.js?v=731"></script>
+ <script src="./js/ui/ui.js?v=728"></script>
+ <script src="./js/core/game.js?v=731"></script>
+ <script src="./js/systems/balance-v721.js?v=734"></script>
+ <script src="./js/systems/camera-v722.js?v=728"></script>
+ <script src="./js/systems/enhancements-v724.js?v=728"></script>
+ <script src="./js/systems/consolidation-v726.js?v=728"></script>
+ <script src="./js/systems/gameplay-v727.js?v=731"></script>
+ <script src="./js/systems/beasts-v729.js?v=729"></script>
+ <script src="./js/systems/quest-hierrogris.js?v=734"></script>
+ <script src="./js/systems/mobile-declutter-v732.js?v=732"></script>
+ <script src="./js/systems/npc-wander-v733.js?v=733"></script>
+ <script src="./js/main.js?v=734"></script>
+</body>
+</html>
