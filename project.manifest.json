@@ -1,0 +1,59 @@
+{
+  "name": "Proyecto Ultra",
+  "architectureVersion": "1.0.0-modular",
+  "entry": "index.html",
+  "modules": {
+    "app": [
+      "js/app/bootstrap.js"
+    ],
+    "core": [
+      "js/core/characterAdapter.js",
+      "js/core/events/eventBus.js",
+      "js/core/game.js",
+      "js/core/input.js",
+      "js/core/render.js",
+      "js/core/save/quickSlotPersistence.js",
+      "js/core/sound.js",
+      "js/core/state.js",
+      "js/core/westerosRenderer.js"
+    ],
+    "data": [
+      "js/data/equipment/extendedWeapons.js",
+      "js/data/items.js",
+      "js/data/skills.js",
+      "js/data/world.js"
+    ],
+    "systems": [
+      "js/systems/combat.js",
+      "js/systems/crafting.js",
+      "js/systems/equipment/equipmentRules.js",
+      "js/systems/gathering/toolDurability.js",
+      "js/systems/inventory.js",
+      "js/systems/loot/extendedWeaponLoot.js",
+      "js/systems/magic.js",
+      "js/systems/quickbar/quickbar.js",
+      "js/systems/world-services.js"
+    ],
+    "ui": [
+      "js/ui/hud/hudBindings.js",
+      "js/ui/hud/quickbarView.js",
+      "js/ui/inventory/dragDrop.js",
+      "js/ui/inventory/inventoryViewIntegration.js",
+      "js/ui/ui.js"
+    ],
+    "legacy": [
+      "js/legacy/systems/balance-v721.js",
+      "js/legacy/systems/beasts-v729.js",
+      "js/legacy/systems/camera-v722.js",
+      "js/legacy/systems/consolidation-v726.js",
+      "js/legacy/systems/enemy-casters-v740.js",
+      "js/legacy/systems/enhancements-v724.js",
+      "js/legacy/systems/gameplay-v727.js",
+      "js/legacy/systems/guard-combat-v736.js",
+      "js/legacy/systems/mobile-declutter-v732.js",
+      "js/legacy/systems/npc-wander-v733.js",
+      "js/legacy/systems/quest-hierrogris.js"
+    ]
+  },
+  "notes": "HUD preservado; migración progresiva y compatible con GitHub Pages."
+}

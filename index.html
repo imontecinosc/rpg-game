@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="es">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+ <meta name="theme-color" content="#10100f" />
+ <title>Proyecto Ultra · Core modular</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com" />
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+ <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+ <link rel="stylesheet" href="./css/base.css?v=732" />
+ <link rel="stylesheet" href="./css/hud.css?v=744" />
+ <link rel="stylesheet" href="./css/dialogs.css?v=728" />
+</head>
+<body>
+ <main id="game-shell">
+ <canvas id="game" aria-label="Proyecto Ultra"></canvas>
+ <div id="error-box" hidden></div>
+
+ <section class="minimap-wrap hud-layer" id="minimap-panel">
+ <div class="minimap" id="minimap-face">
+ <canvas id="minimap" width="176" height="176" style="width:100%;height:100%;border-radius:50%;position:absolute;inset:0;"></canvas>
+ <span id="minimap-zone" hidden>Valdoria</span>
+ </div>
+ <div class="map-buttons">
+ <button class="round-btn" id="zoom-in" type="button">＋</button>
+ <button class="round-btn" id="zoom-reset" type="button">⌖<span id="zoom-value" hidden>100%</span></button>
+ </div>
+ <button id="minimap-toggle" type="button" hidden aria-label="Plegar minimapa">−</button>
+</section>
+
+<section class="quest hud-layer" id="quest-tracker">
+ <h3>Misiones activas</h3>
+ <p><strong id="quest-title">La caravana de Hierrogris</strong></p>
+ <p id="quest-objective">Habla con Edric, administrador de Valdoria.</p>
+ <p id="quest-hint">Busca el símbolo dorado dentro de la ciudad.</p>
+ <i id="quest-progress-fill" hidden></i>
+</section>
+
+<div class="mode hud-layer" id="target-card">
+ <span class="mode-dot"></span><strong id="player-state">Modo batalla</strong> · Objetivo: <span id="target-name">Bandido saqueador</span><span id="target-hp" hidden></span><span id="auto-status" hidden></span>
+</div>
+<div id="location-card" hidden><strong id="location-name">Valdoria</strong><span id="coords"></span></div>
+
+<header id="hud-top" hidden></header>
+<div id="joystick" hidden><div id="stick"></div></div>
+<div id="specials" hidden></div>
+
+<div id="cast-bar" hidden>
+ <b id="cast-name"></b>
+ <div class="cast-track"><i id="cast-fill"></i></div>
+</div>
+<div id="activity-bar" hidden aria-live="polite">
+ <div class="activity-heading"><b id="activity-name">Acción</b><span id="activity-time"></span></div>
+ <div class="activity-track"><i id="activity-fill"></i></div>
+ <small id="activity-status"></small>
+ <button id="activity-cancel" type="button">Cancelar</button>
+</div>
+
+<div id="player-status" hidden aria-label="Estadísticas del personaje">
+ <button id="collapse-status" type="button">+</button>
+ <div id="quick-stats"><span>FUE <b id="str-value">50</b></span><span>DES <b id="dex-value">50</b></span><span>INT <b id="int-value">20</b></span><span>⚖ <b id="weight-value">0/100</b></span><span>🪙 <b id="gold-value">0</b></span></div>
+ <div id="quick-skills"></div>
+ <div id="hud-skill-total">0</div>
+</div>
+
+<!-- Sin lugar todavía en el HUD: quedan ocultos hasta definir dónde van. -->
+<button id="zoom-out" type="button" hidden>−</button>
+<button id="cycle-target" type="button" hidden><span></span></button>
+<button id="skills-btn" type="button" hidden>Habilidades</button>
+<button id="craft-btn" type="button" hidden>Artesanía</button>
+<button id="world-btn" type="button" hidden>Mapa</button>
+<div id="camera-controls" hidden></div>
+
+<section class="hud hud-layer" id="hud-bottom">
+ <div class="resource left">
+ <div class="portrait-wrap">
+ <div class="portrait" id="portrait-skills-btn" role="button" tabindex="0" aria-label="Abrir habilidades"></div>
+ <div class="hud-title" id="hud-title" hidden></div>
+ </div>
+ <div class="resource-label"><span>VIDA</span><span><b id="hp-text">120/120</b></span></div>
+ <div class="big-bar life"><span id="hp-fill"></span><b></b></div>
+ </div>
+
+ <div class="center">
+ <div class="player-name" id="player-name">Pitiao</div>
+ <button class="milestone orange" id="special-60" disabled><span>60<small>skill</small></span></button>
+ <button class="milestone red" id="special-80" disabled><span>80<small>skill</small></span></button>
+ <div class="action-frame"></div>
+ <div class="utility" aria-label="Habilidades de clase">
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ <button class="util-btn empty-ability" type="button" aria-label="Ranura de habilidad vacía"></button>
+ </div>
+ <div id="spell-strip" hidden></div>
+ <div class="skills" aria-label="Equipables y consumibles">
+ <button class="slot quick-slot" data-quick-index="0" data-tip="Espada equipada"><span class="icon">🗡️</span><span class="key">1</span></button>
+ <button class="slot quick-slot" data-quick-index="1" data-tip="Escudo equipado"><span class="icon">🛡️</span><span class="key">2</span></button>
+ <button class="slot quick-slot" data-quick-index="2" data-tip="Picota de minería"><span class="icon">⛏️</span><span class="key">3</span></button>
+ <button class="slot quick-slot" data-quick-index="3" data-tip="Hacha equipada"><span class="icon">🪓</span><span class="key">4</span></button>
+ <button class="slot quick-slot" id="heal-btn" data-quick-index="4" data-tip="Vendas"><span class="icon">🩹</span><span class="key">5</span></button>
+ <button class="slot quick-slot" id="potion-btn" data-quick-index="5" data-tip="Pociones"><span class="icon">🧪</span><span class="key">Q</span><b id="potion-count" hidden>0</b></button>
+ <button class="slot quick-slot" data-quick-index="6" data-tip="Ranura vacía"><span class="icon"></span><span class="key">R</span></button>
+ </div>
+ <button id="battle-btn" type="button" hidden>Paz/Batalla</button>
+ <button id="attack-btn" type="button" hidden>Autoataque</button>
+ <button id="use-btn" type="button" hidden>Usar</button>
+ <div class="stamina-wrap" data-tip="Aguante"><div class="stamina"><span id="stam-fill"></span></div><b id="stam-text" hidden></b></div>
+ </div>
+
+ <div class="resource right">
+ <div class="bag-wrap" id="inventory-bag-btn" role="button" tabindex="0" aria-label="Abrir inventario"><div class="bag"><div class="bag-icon">🎒</div></div></div>
+ <div class="resource-label"><span>MANÁ</span><span><b id="mana-text">90/90</b></span></div>
+ <div class="big-bar mana"><span id="mana-fill"></span><b></b></div>
+ </div>
+ </section>
+
+ <div class="side-actions left"><button class="menu-btn" type="button">Chat</button><button class="menu-btn" type="button">Grupo</button></div>
+ <div class="side-actions right"><button class="menu-btn" id="portrait-btn" type="button">Personaje</button></div>
+ <div class="tooltip" id="tooltip"></div>
+
+<div id="death-veil" hidden aria-live="assertive">
+ <strong>Has muerto</strong>
+ <span>Tus objetos quedaron en tu cadáver</span>
+</div>
+
+<aside id="toasts" aria-live="polite"></aside><aside id="level-notices" aria-live="polite"></aside>
+
+
+
+
+ <dialog id="character-dialog" class="game-dialog wide">
+ <header><h2>Ficha del personaje</h2><button data-close>✕</button></header>
+ <div class="character-sheet">
+ <section class="character-overview">
+ <div class="character-avatar">IM</div>
+ <div><h3 id="character-name">Pitiao</h3><p id="character-condition">Estado: Paz</p><p id="character-location">Valdoria</p></div>
+ </section>
+ <section class="character-grid">
+ <div class="stat-card"><span>Fuerza</span><b id="sheet-str">50</b></div>
+ <div class="stat-card"><span>Destreza</span><b id="sheet-dex">50</b></div>
+ <div class="stat-card"><span>Inteligencia</span><b id="sheet-int">20</b></div>
+ <div class="stat-card"><span>Armadura</span><b id="sheet-armor">0</b></div>
+ <div class="stat-card"><span>Daño</span><b id="sheet-damage">0</b></div>
+ <div class="stat-card"><span>Carga</span><b id="sheet-weight">0/100</b></div>
+ <div class="stat-card"><span>Oro transportado</span><b id="sheet-gold">0</b></div>
+ <div class="stat-card"><span>Total de skills</span><b id="sheet-skill-cap">0 / 700</b></div>
+ </section>
+ <section><h3>Habilidades dominantes</h3><div id="sheet-top-skills" class="sheet-skill-list"></div></section>
+ <section><h3>Estado y efectos</h3><div id="sheet-effects" class="list-card">Sin efectos activos.</div></section>
+ </div>
+ </dialog>
+
+ <dialog id="inventory-dialog" class="game-dialog inventory-window-dialog">
+ <div class="inv-header">
+ <div class="inv-tabs">
+ <span class="active">PERSONAJE</span>
+ </div>
+ <button class="inv-close" data-close aria-label="Cerrar inventario">✕</button>
+ </div>
+
+ <div class="inv-upper">
+ <div class="paperdoll-area">
+ <div class="paperdoll-frame">
+ <canvas id="paperdoll" width="260" height="440" aria-label="Personaje equipado" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-48%);width:146px;height:292px;"></canvas>
+ </div>
+ <button class="pd-slot pd-head-slot" data-slot="head"><span class="pd-icon">🪖</span><small>CABEZA</small></button>
+ <button class="pd-slot pd-collar-slot" data-slot="amulet"><span class="pd-icon">📿</span><small>COLLAR</small></button>
+ <button class="pd-slot pd-neck-slot" data-slot="neck"><span class="pd-icon">🧣</span><small>CUELLO</small></button>
+ <button class="pd-slot pd-chest-slot" data-slot="chest"><span class="pd-icon">🥋</span><small>PECHO</small></button>
+ <button class="pd-slot pd-hands-slot" data-slot="gloves"><span class="pd-icon">🧤</span><small>MANOS</small></button>
+ <button class="pd-slot pd-ring1-slot" data-slot="ring1"><span class="pd-icon">💍</span><small>ANILLO</small></button>
+ <button class="pd-slot pd-legs-slot" data-slot="pants"><span class="pd-icon">👖</span><small>PIERNAS</small></button>
+ <button class="pd-slot pd-feet-slot" data-slot="boots"><span class="pd-icon">🥾</span><small>PIES</small></button>
+ <button class="pd-slot pd-back-slot" data-slot="cloak"><span class="pd-icon">🧣</span><small>CAPA</small></button>
+ <button class="pd-slot pd-ring2-slot" data-slot="ring2"><span class="pd-icon">💍</span><small>ANILLO</small></button>
+ <button class="pd-slot pd-tunic-slot" data-slot="robe"><span class="pd-icon">👘</span><small>TÚNICA</small></button>
+ <button class="pd-slot pd-arms-slot" data-slot="arms"><span class="pd-icon">🦾</span><small>BRAZOS</small></button>
+ <button class="pd-slot pd-main-slot" data-slot="weapon"><span class="pd-icon">🗡️</span><small>ARMA</small></button>
+ <button class="pd-slot pd-off-slot" data-slot="shield"><span class="pd-icon">🛡️</span><small>SEC.</small></button>
+ </div>
+
+ <div class="character-stats">
+ <div class="stats-top">
+ <div class="stat-box"><span>DAÑO</span><strong id="pd-stat-damage">0</strong></div>
+ <div class="stat-box"><span>ARMADURA</span><strong id="pd-stat-armor">0</strong></div>
+ <div class="stat-box"><span>CARGA</span><strong id="pd-stat-weight">0/100</strong></div>
+ </div>
+ </div>
+ </div>
+
+ <div class="inventory-tabs">
+ <button class="inventory-tab active" data-tab="inventario" type="button">INVENTARIO</button>
+ </div>
+
+ <div class="inventory-grid-wrap">
+ <div class="inventory-grid" id="inventory-grid"></div>
+ </div>
+
+ <div class="inv-footer">
+ <div><span class="gold" id="inv-gold">ORO: 0</span> &nbsp; · &nbsp; <span id="inv-space">0 / 40 ESPACIOS</span></div>
+ <div class="inv-footer-actions">
+ <button class="inv-small" id="sort-btn" type="button">ORDENAR</button>
+ </div>
+ </div>
+ </dialog>
+
+ <aside id="item-detail" class="item-detail-popup">Selecciona un objeto.</aside>
+
+ <dialog id="skills-dialog" class="game-dialog wide">
+ <header><h2>Habilidades</h2><button data-close>✕</button></header>
+ <div class="skill-head"><b id="skill-total"></b><span>Máximo 100 por habilidad · máximo 700 en total. ↓ libera puntos gradualmente.</span></div>
+ <div id="skills-list"></div>
+ </dialog>
+
+ <dialog id="craft-dialog" class="game-dialog wide">
+ <header><h2>Artesanía y recolección</h2><button data-close>✕</button></header>
+ <div class="craft-layout"><nav id="craft-tabs"></nav><section id="recipe-list"></section></div>
+ </dialog>
+
+ <dialog id="world-dialog" class="game-dialog wide">
+ <header><h2>Mapa del mundo</h2><button data-close>✕</button></header>
+ <div class="map-wrap"><canvas id="world-map" width="920" height="560"></canvas><div class="map-legend">● Pitiao &nbsp; ◆ Ciudad &nbsp; ▲ Mazmorra &nbsp; ◉ Recurso &nbsp; ━ Camino</div></div>
+ <div id="map-info" class="map-info">Toca una ciudad o mazmorra para ver información.</div>
+ </dialog>
+
+
+ <dialog id="bank-dialog" class="game-dialog wide">
+ <header><h2>Banco de cuenta</h2><button data-close>✕</button></header>
+ <div class="bank-layout">
+ <section><h3>Tu inventario</h3><div id="bank-inventory" class="bank-grid"></div></section>
+ <section class="transfer-panel"><div id="bank-detail" class="selection-detail">Selecciona un objeto.</div><button id="bank-transfer-btn" disabled>Transferir</button></section>
+ <section><h3>Objetos depositados</h3><div id="bank-storage" class="bank-grid"></div></section>
+ </div>
+ </dialog>
+
+ <dialog id="vendor-dialog" class="game-dialog wide">
+ <header><h2 id="vendor-title">Comerciante</h2><button data-close>✕</button></header>
+ <div class="vendor-layout">
+ <section><h3>Comprar</h3><div id="vendor-buy" class="vendor-grid"></div></section>
+ <section class="transfer-panel"><div id="vendor-detail" class="selection-detail">Selecciona un objeto.</div><button id="vendor-action-btn" disabled>Comprar</button></section>
+ <section><h3>Vender</h3><div id="vendor-sell" class="vendor-grid"></div></section>
+ </div>
+ </dialog>
+
+ <dialog id="corpse-dialog" class="game-dialog">
+ <header><h2>Cadáver</h2><button data-close>✕</button></header>
+ <div class="loot-layout"><div id="corpse-items" class="item-grid"></div><aside id="corpse-detail" class="selection-detail">Selecciona un objeto para ver sus características.</aside></div>
+ <div class="detail-actions"><button id="loot-all-btn">Recoger todo</button></div>
+ </dialog>
+
+ <dialog id="settings-dialog" class="game-dialog">
+ <header><h2>Ajustes y controles</h2><button data-close>✕</button></header>
+ <div class="settings-list">
+ <p><b>PC:</b> clic derecho mover · clic izquierdo seleccionar/accionar · WASD/Flechas mover · Tab Paz/Batalla · Espacio autoataque · 1–5/Q/R barra rápida · E usar · Mochila: inventario · K skills · C crafting · M mapa · ESC menú.</p>
+ <label><input id="sound-muted" type="checkbox" /> Silenciar sonidos</label>
+ <label>Volumen <input id="sound-volume" type="range" min="0" max="100" value="65" /></label>
+ <button id="save-btn">Guardar partida</button>
+ <button id="load-btn">Cargar partida</button>
+ <button id="export-save-btn">Exportar partida</button>
+ <button id="import-save-btn">Importar partida</button>
+ <input id="import-save-file" type="file" accept="application/json,.json" hidden />
+ <div id="save-status" class="save-status">Guardado automático activo.</div>
+ <div id="balance-summary" class="balance-summary">Estadísticas de recompensas: sin datos todavía.</div>
+ <button id="reset-btn">Reiniciar partida</button>
+ </div>
+ </dialog>
+
+ <dialog id="quest-dialog" class="game-dialog quest-dialog">
+ <header><h2 id="quest-dialog-title">La caravana de Hierrogris</h2><button data-close>✕</button></header>
+ <div id="quest-dialog-body" class="quest-dialog-body"></div>
+ <div id="quest-dialog-actions" class="quest-dialog-actions"></div>
+ </dialog>
+ </main>
+
+ <script src="./js/data/skills.js?v=1000"></script>
+ <script src="./js/data/items.js?v=1000"></script>
+ <script src="./js/data/equipment/extendedWeapons.js?v=1000"></script>
+ <script src="./js/data/world.js?v=1000"></script>
+
+ <script src="./js/core/state.js?v=1000"></script>
+ <script src="./js/core/events/eventBus.js?v=1000"></script>
+ <script src="./js/core/sound.js?v=1000"></script>
+
+ <script src="./js/systems/inventory.js?v=1000"></script>
+ <script src="./js/systems/equipment/equipmentRules.js?v=1000"></script>
+ <script src="./js/systems/quickbar/quickbar.js?v=1000"></script>
+ <script src="./js/systems/combat.js?v=1000"></script>
+ <script src="./js/systems/magic.js?v=1000"></script>
+ <script src="./js/systems/crafting.js?v=1000"></script>
+ <script src="./js/systems/world-services.js?v=1000"></script>
+ <script src="./js/systems/gathering/toolDurability.js?v=1000"></script>
+ <script src="./js/systems/loot/extendedWeaponLoot.js?v=1000"></script>
+
+ <script src="./js/core/input.js?v=1000"></script>
+ <script src="./js/core/characterAdapter.js?v=1000"></script>
+ <script src="./js/core/westerosRenderer.js?v=1000"></script>
+ <script src="./js/core/render.js?v=1000"></script>
+
+ <script src="./js/ui/ui.js?v=1000"></script>
+ <script src="./js/ui/hud/quickbarView.js?v=1000"></script>
+ <script src="./js/ui/inventory/inventoryViewIntegration.js?v=1000"></script>
+ <script src="./js/ui/inventory/dragDrop.js?v=1000"></script>
+ <script src="./js/ui/hud/hudBindings.js?v=1000"></script>
+
+ <script src="./js/core/game.js?v=1000"></script>
+ <script src="./js/legacy/systems/balance-v721.js?v=1000"></script>
+ <script src="./js/legacy/systems/camera-v722.js?v=1000"></script>
+ <script src="./js/legacy/systems/enhancements-v724.js?v=1000"></script>
+ <script src="./js/legacy/systems/consolidation-v726.js?v=1000"></script>
+ <script src="./js/legacy/systems/gameplay-v727.js?v=1000"></script>
+ <script src="./js/legacy/systems/beasts-v729.js?v=1000"></script>
+ <script src="./js/legacy/systems/quest-hierrogris.js?v=1000"></script>
+ <script src="./js/legacy/systems/mobile-declutter-v732.js?v=1000"></script>
+ <script src="./js/legacy/systems/npc-wander-v733.js?v=1000"></script>
+ <script src="./js/legacy/systems/guard-combat-v736.js?v=1000"></script>
+ <script src="./js/legacy/systems/enemy-casters-v740.js?v=1000"></script>
+ <script src="./js/core/save/quickSlotPersistence.js?v=1000"></script>
+ <script src="./js/app/bootstrap.js?v=1000"></script>
+ <script>
+const tooltip=document.getElementById('tooltip');
+document.querySelectorAll('[data-tip]').forEach(el=>{el.addEventListener('mouseenter',()=>{tooltip.textContent=el.dataset.tip;tooltip.style.display='block'});el.addEventListener('mousemove',e=>{tooltip.style.left=e.clientX+14+'px';tooltip.style.top=e.clientY+14+'px'});el.addEventListener('mouseleave',()=>tooltip.style.display='none');el.addEventListener('click',()=>el.animate([{transform:'scale(1)'},{transform:'scale(.92)'},{transform:'scale(1)'}],{duration:170}))});
+ </script>
+</body>
+</html>
